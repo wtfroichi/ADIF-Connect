@@ -1,0 +1,28 @@
+name: adif_connect
+description: "ADIF Connect - Multimodal rail companion for iOS"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_lucide: ^1.4.0
+  archive: ^3.6.1
+  file_picker: ^8.0.0
+  shared_preferences: ^2.2.3
+  live_activities: ^2.3.0
+  barcode_widget: ^2.0.4
+  barcode: ^2.2.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
