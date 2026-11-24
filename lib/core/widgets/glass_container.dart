@@ -35,8 +35,10 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final defaultBg = isDark ? AppTheme.darkGlassSurface : AppTheme.lightGlassSurface;
-    final defaultBorder = isDark ? AppTheme.darkCardBorder : AppTheme.lightCardBorder;
+    final defaultBg =
+        isDark ? AppTheme.darkGlassSurface : AppTheme.lightGlassSurface;
+    final defaultBorder =
+        isDark ? AppTheme.darkCardBorder : AppTheme.lightCardBorder;
 
     Widget content = ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -51,7 +53,7 @@ class GlassContainer extends StatelessWidget {
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: borderColor ?? defaultBorder,
-              width: 1.0,
+              width: 1.2,
             ),
           ),
           child: child,

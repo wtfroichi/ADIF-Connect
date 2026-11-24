@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import '../core/constants/adif_stations.dart';
+import '../core/constants/app_strings.dart';
 import '../models/station_board_model.dart';
 import 'adif_live_repository.dart';
 import 'settings_service.dart';
+import 'station_widget_cache.dart';
 
 class SupabaseAdifRepository implements AdifLiveRepository {
   final SettingsService settingsService;
@@ -25,34 +28,44 @@ class SupabaseAdifRepository implements AdifLiveRepository {
 
   Future<List<StationBoardItem>> _fetchFromSupabase(
       String stationCode, String type) async {
-    try {
-      final base = SettingsService.supabaseUrl.replaceAll(RegExp(r'/+$'), '');
-      final uri = Uri.parse(
-          '$base/functions/v1/adif-board?station=$stationCode&type=$type');
+    final base = SettingsService.supabaseUrl.replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.parse(
+        '$base/functions/v1/adif-board?station=$stationCode&type=$type');
 
-      final request = await _httpClient.getUrl(uri);
-      request.headers
-          .set('Authorization', 'Bearer ${SettingsService.supabaseAnonKey}');
-      request.headers.set('apikey', SettingsService.supabaseAnonKey);
-      request.headers.set('Accept', 'application/json');
+    final request = await _httpClient.getUrl(uri);
+    request.headers
+        .set('Authorization', 'Bearer ${SettingsService.supabaseAnonKey}');
+    request.headers.set('apikey', SettingsService.supabaseAnonKey);
+    request.headers.set('Accept', 'application/json');
 
-      final response =
-          await request.close().timeout(const Duration(seconds: 8));
-      if (response.statusCode == 200) {
-        final body = await response.transform(utf8.decoder).join();
-        final dynamic decoded = jsonDecode(body);
-        if (decoded is Map<String, dynamic> && decoded['items'] is List) {
-          final List<dynamic> list = decoded['items'] as List<dynamic>;
-          return list
-              .map((json) =>
-                  StationBoardItem.fromJson(json as Map<String, dynamic>))
-              .toList();
-        }
-      }
-    } catch (_) {
-      // Return empty list on failure so StationBoardScreen shows the retry state
+    final response = await request.close().timeout(const Duration(seconds: 8));
+    final body = await response.transform(utf8.decoder).join();
+    if (response.statusCode != HttpStatus.ok) {
+      throw HttpException('ADIF board returned HTTP ${response.statusCode}');
     }
 
-    return const [];
+    final decoded = jsonDecode(body);
+    if (decoded is! Map<String, dynamic> || decoded['items'] is! List) {
+      throw const FormatException('Invalid ADIF board response');
+    }
+
+    final items = decoded['items'] as List<dynamic>;
+    final error = decoded['error'];
+    if (items.isEmpty &&
+        error is String &&
+        error != AppStrings.stationNoTrains) {
+      throw HttpException(error);
+    }
+
+    final parsedItems = items
+        .map((json) => StationBoardItem.fromJson(json as Map<String, dynamic>))
+        .toList();
+    if (type == 'departures') {
+      final station = AdifStations.byCode(stationCode);
+      if (station != null) {
+        await StationWidgetCache.cacheDepartures(station, parsedItems);
+      }
+    }
+    return parsedItems;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart' hide BarcodeType;
+import '../../core/constants/adif_stations.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/operator_themes.dart';
@@ -33,6 +34,13 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
     return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
   }
 
+  String _stationCodeForDisplay(String code) {
+    final trimmed = code.trim();
+    return RegExp(r'^\d+$').hasMatch(trimmed)
+        ? AdifStations.resolveName(trimmed)
+        : trimmed;
+  }
+
   Future<void> _toggleLiveActivity() async {
     if (_isActivityLoading) return;
     setState(() => _isActivityLoading = true);
@@ -53,10 +61,14 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
           SnackBar(content: Text(error.message)),
         );
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.liveActivitySetupError)),
+          SnackBar(
+            content: Text(
+              '${AppStrings.liveActivitySetupError} (${error.toString()})',
+            ),
+          ),
         );
       }
     } finally {
@@ -67,9 +79,19 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final style = OperatorThemes.forTrain(
-        widget.ticket.operator, widget.ticket.trainType);
-    final barcodeData =
-        widget.ticket.barcode?.message ?? widget.ticket.bookingReference;
+      widget.ticket.operator,
+      widget.ticket.trainType,
+      isDark: AppTheme.isDark(context),
+    );
+    final ticketNumber = widget.ticket.ticketNumber?.trim();
+    final barcodeData = ticketNumber != null && ticketNumber.isNotEmpty
+        ? ticketNumber
+        : widget.ticket.barcode?.message ?? '';
+    final originCode = _stationCodeForDisplay(widget.ticket.originCode);
+    final destinationCode =
+        _stationCodeForDisplay(widget.ticket.destinationCode);
+    final origin = AdifStations.resolveName(widget.ticket.origin);
+    final destination = AdifStations.resolveName(widget.ticket.destination);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final onSurface = theme.colorScheme.onSurface;
@@ -114,7 +136,7 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
               backgroundColor: isDark
                   ? style.primary.withValues(alpha: 0.2)
                   : style.primary.withValues(alpha: 0.08),
-              borderColor: style.primary.withValues(alpha: isDark ? 0.5 : 0.3),
+              borderColor: AppTheme.getGlassBorder(context),
               glowColor: style.primary,
               child: Column(
                 children: [
@@ -137,80 +159,95 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
                           ),
                         ),
                       ),
-                      Text(
-                        '${AppStrings.ticketLocalizer}: ${widget.ticket.bookingReference}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: onSurface,
+                      if (widget.ticket.bookingReference.trim().isNotEmpty)
+                        Text(
+                          '${AppStrings.ticketLocalizer}: ${widget.ticket.bookingReference}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: onSurface,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
                   // Route
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.ticket.originCode,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: onSurface,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              originCode,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: onSurface,
+                              ),
                             ),
-                          ),
-                          Text(
-                            widget.ticket.origin,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: onSurfaceVariant,
+                            if (origin != originCode)
+                              Text(
+                                origin,
+                                maxLines: 2,
+                                softWrap: true,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: onSurfaceVariant,
+                                ),
+                              ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _formatTime(widget.ticket.departureTime),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _formatTime(widget.ticket.departureTime),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: style.primary,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      Icon(Icons.train_rounded, color: style.primary, size: 28),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            widget.ticket.destinationCode,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: onSurface,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(Icons.train_rounded,
+                            color: style.primary, size: 28),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              destinationCode,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: onSurface,
+                              ),
                             ),
-                          ),
-                          Text(
-                            widget.ticket.destination,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: onSurfaceVariant,
+                            if (destination != destinationCode)
+                              Text(
+                                destination,
+                                maxLines: 2,
+                                softWrap: true,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: onSurfaceVariant,
+                                ),
+                              ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _formatTime(widget.ticket.arrivalTime),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _formatTime(widget.ticket.arrivalTime),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: style.primary,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -219,7 +256,8 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
             ),
             const SizedBox(height: 16),
 
-            if (widget.ticket.barcode != null) ...[
+            if (widget.ticket.barcode != null &&
+                widget.ticket.barcode!.format != BarcodeType.unknown) ...[
               // High-Contrast Bright Aztec/QR Card
               Container(
                 padding:
@@ -251,8 +289,10 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      widget.ticket.barcode?.altText ??
-                          widget.ticket.bookingReference,
+                      ticketNumber != null && ticketNumber.isNotEmpty
+                          ? '${AppStrings.ticketNumber}: $ticketNumber'
+                          : widget.ticket.barcode?.altText ??
+                              widget.ticket.bookingReference,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,

@@ -12,5 +12,6 @@ import WidgetKit
 struct TrainLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         TrainLiveActivityWidget()
+        StationDeparturesWidget()
     }
 }

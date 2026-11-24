@@ -1,0 +1,15 @@
+/build/ios/Release-iphoneos/Flutter.framework.dSYM/Contents/Resources/DWARF/Flutter filter=lfs diff=lfs merge=lfs -text
+/build/ios/SourcePackages/repositories/SwiftyGif-7e0f294b/objects/pack/pack-04c9eb4910335c3bd1dcfc2ceaebf1a52e5c40d1.pack filter=lfs diff=lfs merge=lfs -text
+/.dart_tool/flutter_build/c769eef0659a9de2d0639d3478cd82df/app.dill filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphonesimulator/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphonesimulator/Flutter.framework/Flutter filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphonesimulator/Runner.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphonesimulator/Runner.app/Frameworks/Flutter.framework/Flutter filter=lfs diff=lfs merge=lfs -text
+/build/ios/iphonesimulator/Runner.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/build/ios/iphonesimulator/Runner.app/Frameworks/Flutter.framework/Flutter filter=lfs diff=lfs merge=lfs -text
+/.dart_tool/flutter_build/ff7dd0b3e26223bb2c309ba4a26c7de9/app.dill filter=lfs diff=lfs merge=lfs -text
+/.dart_tool/flutter_build/c7c6ed80a37e1f9b0f00273fd253753b/app.dill filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphoneos/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/build/ios/Debug-iphoneos/Runner.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/build/ios/iphoneos/Runner.app/Frameworks/App.framework/flutter_assets/kernel_blob.bin filter=lfs diff=lfs merge=lfs -text
+/.dart_tool/flutter_build/45bd18222d1723003880ac2f6146989d/app.dill filter=lfs diff=lfs merge=lfs -text

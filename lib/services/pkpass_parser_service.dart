@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
+import '../core/constants/adif_stations.dart';
+import '../core/constants/app_strings.dart';
 import '../core/theme/operator_themes.dart';
 import '../models/ticket_model.dart';
 
@@ -8,8 +10,7 @@ class PkpassParserService {
   /// Unzips a genuine .pkpass archive, extracts pass.json, and maps all Renfe/ADIF fields to TicketModel.
   static TicketModel parse(Uint8List bytes) {
     if (bytes.length < 4 || bytes[0] != 0x50 || bytes[1] != 0x4B) {
-      throw const FormatException(
-          'O ficheiro seleccionado non é un arquivo .pkpass ou ZIP válido');
+      throw const FormatException(AppStrings.pkpassInvalidArchive);
     }
 
     final archive = ZipDecoder().decodeBytes(bytes);
@@ -23,7 +24,7 @@ class PkpassParserService {
     }
 
     if (passJsonFile == null) {
-      throw const FormatException('O ficheiro .pkpass non contén pass.json');
+      throw const FormatException(AppStrings.pkpassMissingPassJson);
     }
 
     final contentString = utf8.decode(passJsonFile.content as List<int>);
@@ -59,11 +60,12 @@ class PkpassParserService {
       ...backFields,
     ];
 
-    // 1. Origin & Destination
+    // 1. Resolve endpoint names from field keys or station-name labels.
     final originKeys = [
       'origin',
       'origen',
       'from',
+      'saída',
       'salida',
       'orixe',
       'estacionorigen'
@@ -76,21 +78,14 @@ class PkpassParserService {
       'chegada',
       'estaciondestino'
     ];
-    final primaryOriginField = _findStationField(primaryFields, originKeys);
-    final primaryDestinationField =
-        _findStationField(primaryFields, destinationKeys);
-    final hasNamedEndpoints =
-        primaryOriginField != null || primaryDestinationField != null;
-    final originField = primaryOriginField ??
+    final originField = _findStationField(primaryFields, originKeys) ??
+        _findPositionalStationField(primaryFields, 0) ??
         _findStationField(allFields, originKeys) ??
-        (!hasNamedEndpoints && primaryFields.isNotEmpty
-            ? primaryFields[0]
-            : null);
-    final destField = primaryDestinationField ??
+        _findCandidateStationField(allFields, first: true);
+    final destField = _findStationField(primaryFields, destinationKeys) ??
+        _findPositionalStationField(primaryFields, 1) ??
         _findStationField(allFields, destinationKeys) ??
-        (!hasNamedEndpoints && primaryFields.length > 1
-            ? primaryFields[1]
-            : null);
+        _findCandidateStationField(allFields, first: false);
     final origin = _stationNameAndCode(originField);
     final destination = _stationNameAndCode(destField);
     final originVal = origin.$1;
@@ -105,22 +100,21 @@ class PkpassParserService {
         _findValue(allFields, ['tren', 'train', 'trainnumber', 'numerotren']) ??
         '';
 
+    final trainLabels = [
+      ...secondaryFields,
+      ...auxiliaryFields,
+      ...headerFields,
+      ...primaryFields,
+    ].map((field) => '${field['key'] ?? ''} ${field['label'] ?? ''}').join(' ');
     final productRaw = _normalizeTrainProduct(
-      _findValue([
-            ...secondaryFields,
-            ...auxiliaryFields,
-            ...headerFields
-          ], [
-            'producto',
-            'product',
-            'servicio',
-            'tipotren',
-            'comercial',
-            'categoria'
-          ]) ??
-          _findValue(allFields,
-              ['producto', 'product', 'servicio', 'tipotren', 'comercial']) ??
-          _inferTrainType(operator),
+      '${_findValue(allFields, [
+                'producto',
+                'product',
+                'servicio',
+                'tipotren',
+                'comercial',
+                'categoria'
+              ]) ?? ''} $trainLabels ${_inferTrainType(operator)}',
     );
 
     // 3. Coach & Seat
@@ -138,13 +132,14 @@ class PkpassParserService {
     final seatClass = _findValue(
             auxiliaryFields, ['tarifa', 'clase', 'class', 'fare', 'billete']) ??
         _findValue(allFields, ['tarifa', 'clase', 'class']) ??
-        'Estándar';
+        '';
 
     // 5. Platform (Vía)
-    final platform = _findValue(
-            [...headerFields, ...secondaryFields, ...auxiliaryFields],
-            ['via', 'vía', 'platform', 'anden', 'andén']) ??
-        _findValue(allFields, ['via', 'vía', 'platform']);
+    final platform = _findExplicitValue(allFields, {
+      'via',
+      'platform',
+      'anden',
+    });
 
     // 6. Booking Locator & Passenger Name
     final localizer = _findValue(backFields, [
@@ -173,29 +168,33 @@ class PkpassParserService {
 
     // 7. Dates & Europe/Madrid Timezone Conversion
     final relevantDateStr = json['relevantDate']?.toString();
-    final expirationDateStr = json['expirationDate']?.toString();
-    final dateField = _findValue(allFields, ['fecha', 'date', 'data']);
-    final timeDepField =
-        _findValue(auxiliaryFields, ['salida', 'horasalida', 'departure']) ??
-            _findValue(allFields, ['salida', 'horasalida', 'departure']);
-    final timeArrField =
-        _findValue(auxiliaryFields, ['llegada', 'horallegada', 'arrival']) ??
-            _findValue(allFields, ['llegada', 'horallegada', 'arrival']);
-
-    final departureTime = _parseToMadridTime(
-      isoString: relevantDateStr,
-      dateFallback: dateField,
-      timeFallback: timeDepField,
-      defaultOffsetHours: 2,
-    );
-
-    final arrivalTime = _parseToMadridTime(
-      isoString: expirationDateStr,
-      dateFallback: dateField,
-      timeFallback: timeArrField,
-      defaultOffsetHours: 4,
-      referenceTime: departureTime,
-    );
+    final dateField = _findTravelDate(allFields);
+    final depClock = _clockForStationField(originField) ??
+        _findValue(allFields, ['horasalida', 'departuretime', 'departure']);
+    final arrClock = _clockForStationField(destField) ??
+        _findValue(allFields, ['horallegada', 'arrivaltime', 'arrival']);
+    final travelDate =
+        _madridDateTime(relevantDateStr) ?? _parseTravelDate(dateField);
+    if (travelDate == null) {
+      throw const FormatException(AppStrings.pkpassMissingTravelDate);
+    }
+    if (depClock == null) {
+      throw const FormatException(AppStrings.pkpassMissingDepartureTime);
+    }
+    if (arrClock == null) {
+      throw const FormatException(AppStrings.pkpassMissingArrivalTime);
+    }
+    final departureTime = _dateWithClock(travelDate, depClock);
+    if (departureTime == null) {
+      throw const FormatException(AppStrings.pkpassInvalidDepartureTime);
+    }
+    var arrivalTime = _dateWithClock(travelDate, arrClock);
+    if (arrivalTime == null) {
+      throw const FormatException(AppStrings.pkpassInvalidArrivalTime);
+    }
+    if (arrivalTime.isBefore(departureTime)) {
+      arrivalTime = arrivalTime.add(const Duration(days: 1));
+    }
 
     // 8. Barcode Extraction
     TicketBarcode? barcode;
@@ -231,114 +230,99 @@ class PkpassParserService {
     );
   }
 
-  /// Parses date & time accurately into Europe/Madrid local time (CET UTC+1 / CEST UTC+2).
-  static DateTime _parseToMadridTime({
-    String? isoString,
-    String? dateFallback,
-    String? timeFallback,
-    required int defaultOffsetHours,
-    DateTime? referenceTime,
-  }) {
-    if (isoString != null) {
-      final parsed = DateTime.tryParse(isoString);
-      if (parsed != null) {
-        // If parsed is in UTC, adjust to Europe/Madrid offset
-        if (parsed.isUtc) {
-          final isSummerTime = _isMadridSummerTime(parsed);
-          final madridOffset = Duration(hours: isSummerTime ? 2 : 1);
-          final madrid = parsed.add(madridOffset);
-          return DateTime(madrid.year, madrid.month, madrid.day, madrid.hour,
-              madrid.minute);
-        }
-        return parsed;
-      }
+  static DateTime? _madridDateTime(String? value) {
+    if (value == null) return null;
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return null;
+    final hasOffset =
+        value.endsWith('Z') || RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(value);
+    if (!hasOffset) {
+      return DateTime(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+      );
     }
 
-    // Try combining dateFallback (e.g. "2026-11-23" or "23/11/2026") and timeFallback ("14:30")
-    if (dateFallback != null && timeFallback != null) {
-      final combined = _combineDateAndTime(dateFallback, timeFallback);
-      if (combined != null) return combined;
-    }
-
-    final base = referenceTime ?? DateTime.now();
-    return base.add(Duration(hours: defaultOffsetHours));
+    final utc = parsed.toUtc();
+    final madrid = utc.add(Duration(hours: _isMadridSummerTime(utc) ? 2 : 1));
+    return DateTime(
+        madrid.year, madrid.month, madrid.day, madrid.hour, madrid.minute);
   }
 
   static bool _isMadridSummerTime(DateTime utc) {
-    // Last Sunday of March to Last Sunday of October
     final year = utc.year;
-    final lastSundayMarch = DateTime.utc(
-        year, 3, 31 - ((DateTime.utc(year, 3, 31).weekday) % 7), 1);
-    final lastSundayOctober = DateTime.utc(
-        year, 10, 31 - ((DateTime.utc(year, 10, 31).weekday) % 7), 1);
-    return utc.isAfter(lastSundayMarch) && utc.isBefore(lastSundayOctober);
+    final marchLastDay = DateTime.utc(year, 3, 31);
+    final octoberLastDay = DateTime.utc(year, 10, 31);
+    final summerStarts = DateTime.utc(
+      year,
+      3,
+      31 - marchLastDay.weekday % 7,
+      1,
+    );
+    final summerEnds = DateTime.utc(
+      year,
+      10,
+      31 - octoberLastDay.weekday % 7,
+      1,
+    );
+    return !utc.isBefore(summerStarts) && utc.isBefore(summerEnds);
   }
 
-  static DateTime? _combineDateAndTime(String dateStr, String timeStr) {
-    try {
-      int year = DateTime.now().year;
-      int month = DateTime.now().month;
-      int day = DateTime.now().day;
-
-      if (dateStr.contains('/')) {
-        final parts = dateStr.split('/');
-        if (parts.length >= 3) {
-          day = int.parse(parts[0]);
-          month = int.parse(parts[1]);
-          year = int.parse(parts[2].length == 2 ? '20${parts[2]}' : parts[2]);
-        }
-      } else if (dateStr.contains('-')) {
-        final parts = dateStr.split('-');
-        if (parts.length >= 3) {
-          year = int.parse(parts[0]);
-          month = int.parse(parts[1]);
-          day = int.parse(parts[2].substring(0, 2));
-        }
-      }
-
-      int hour = 12;
-      int minute = 0;
-      final cleanTime = timeStr.replaceAll(RegExp(r'[^0-9:]'), '');
-      if (cleanTime.contains(':')) {
-        final tParts = cleanTime.split(':');
-        hour = int.parse(tParts[0]);
-        minute = int.parse(tParts[1]);
-      }
-
-      return DateTime(year, month, day, hour, minute);
-    } catch (_) {
-      return null;
+  static DateTime? _parseTravelDate(String? value) {
+    if (value == null) return null;
+    final isoDate = DateTime.tryParse(value);
+    if (isoDate != null) {
+      return DateTime(isoDate.year, isoDate.month, isoDate.day);
     }
+    final match = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$').firstMatch(value);
+    if (match == null) return null;
+    return DateTime(
+      int.parse(match.group(3)!),
+      int.parse(match.group(2)!),
+      int.parse(match.group(1)!),
+    );
+  }
+
+  static DateTime? _dateWithClock(DateTime date, String? value) {
+    if (value == null) return null;
+    final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(value);
+    if (match == null) return null;
+    final hour = int.parse(match.group(1)!);
+    final minute = int.parse(match.group(2)!);
+    if (hour > 23 || minute > 59) return null;
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+
+  static String? _clockForStationField(Map<String, dynamic>? field) {
+    final value = field?['value']?.toString().trim();
+    return value != null && RegExp(r'^\d{1,2}:\d{2}$').hasMatch(value)
+        ? value
+        : null;
+  }
+
+  static String? _findTravelDate(List<Map<String, dynamic>> fields) {
+    for (final field in fields) {
+      final key = _normalizedField(field['key']);
+      final label = _normalizedField(field['label']);
+      if (key.contains('fechaventa') ||
+          key.contains('emision') ||
+          label.contains('emision') ||
+          label.contains('venta')) {
+        continue;
+      }
+      if (key.contains('fecha') || key == 'date' || label == 'fecha') {
+        final value = field['value']?.toString();
+        if (_parseTravelDate(value) != null) return value;
+      }
+    }
+    return null;
   }
 
   static String _extractStationCode(String stationName) {
-    final clean = stationName.toUpperCase();
-    if (clean.contains('OURENSE') || clean.contains('ORENSE')) return 'OUR';
-    if (clean.contains('SANTIAGO')) return 'SCQ';
-    if (clean.contains('CORUÑA') || clean.contains('CORUNA')) return 'LC';
-    if (clean.contains('CHAMART') || clean.contains('CHAMARTIN')) {
-      return 'MAD-CH';
-    }
-    if (clean.contains('ATOCHA')) {
-      return 'MAD-AT';
-    }
-    if (clean.contains('SANTS') || clean.contains('BARCELONA')) {
-      return 'BCN';
-    }
-    if (clean.contains('VIGO')) {
-      return 'VGO';
-    }
-    if (clean.contains('PONTEVEDRA')) {
-      return 'PO';
-    }
-    if (clean.contains('LUGO')) {
-      return 'LU';
-    }
-    if (clean.contains('ZAMORA')) {
-      return 'ZA';
-    }
-    if (clean.contains('LEON') || clean.contains('LEÓN')) return 'LE';
-    return clean.length >= 3 ? clean.substring(0, 3) : clean;
+    return AdifStations.byName(stationName)?.adifCode ?? '';
   }
 
   static (String, String) _stationNameAndCode(Map<String, dynamic>? field) {
@@ -348,71 +332,121 @@ class PkpassParserService {
     if (label.isEmpty && value.isEmpty) return ('', '');
 
     if (_isGenericStationLabel(label)) {
-      final name = value;
-      final code =
-          _looksLikeStationCode(name) ? name : _extractStationCode(name);
-      return (_stationNameForCode(code, name), code);
+      return _stationFromToken(value);
     }
 
-    final labelIsCode = _looksLikeStationCode(label);
-    final valueIsCode = _looksLikeStationCode(value);
-    if (valueIsCode && !labelIsCode) return (label, value);
-    if (labelIsCode && !valueIsCode) return (value, label);
+    final labelStation = AdifStations.byName(label);
+    if (labelStation != null) {
+      return (
+        labelStation.name,
+        _looksLikeStationCode(value) ? value : labelStation.adifCode,
+      );
+    }
+    if (_looksLikeStationCode(label)) {
+      final station = AdifStations.byCode(label) ?? AdifStations.byName(value);
+      return (station?.name ?? '', label);
+    }
 
-    if (valueIsCode) return (label.isNotEmpty ? label : value, value);
-    if (labelIsCode) return (value.isNotEmpty ? value : label, label);
-    return (value.isNotEmpty ? value : label, '');
+    if (_looksLikeStationCode(value)) {
+      if (_isNonStationField(label, field['key']?.toString() ?? '')) {
+        return ('', value);
+      }
+      return (label, value);
+    }
+
+    final valueStation =
+        AdifStations.byCode(value) ?? AdifStations.byName(value);
+    if (valueStation != null) return (valueStation.name, valueStation.adifCode);
+    if (_clockForStationField(field) != null &&
+        !_isNonStationField(label, field['key']?.toString() ?? '')) {
+      return (label, '');
+    }
+
+    if (!_isNonStationField(label, field['key']?.toString() ?? '') &&
+        !_isDateValue(value)) {
+      return (value.isNotEmpty ? value : label, '');
+    }
+    return ('', '');
+  }
+
+  static (String, String) _stationFromToken(String token) {
+    if (token.isEmpty || _isDateValue(token) || _clockValue(token)) {
+      return ('', '');
+    }
+    final station = AdifStations.byCode(token) ?? AdifStations.byName(token);
+    if (station != null) {
+      return (
+        station.name,
+        _looksLikeStationCode(token) ? token : station.adifCode,
+      );
+    }
+    return _looksLikeStationCode(token) ? ('', token) : (token, '');
   }
 
   static bool _isGenericStationLabel(String label) {
-    final normalized = label.toUpperCase().replaceAll(RegExp(r'[^A-Z]'), '');
+    final normalized = AdifStations.normalize(label).toUpperCase();
     return const {
       'ORIGEN',
+      'ORIXE',
       'DESTINO',
       'SALIDA',
+      'SAIDA',
       'LLEGADA',
+      'CHEGADA',
       'ORIGIN',
       'DESTINATION',
+      'DEPARTURE',
+      'ARRIVAL',
     }.contains(normalized);
   }
 
-  static String _stationNameForCode(String code, String fallback) {
-    switch (code.toUpperCase()) {
-      case 'OUR':
-      case '22100':
-        return 'Ourense';
-      case 'SCQ':
-      case '31400':
-        return 'Santiago de Compostela';
-      case 'LC':
-      case '15200':
-        return 'A Coruña';
-      case 'MAD-CH':
-      case '10000':
-        return 'Madrid-Chamartín-Clara Campoamor';
-      case 'MAD-AT':
-      case '60000':
-        return 'Madrid-Puerta de Atocha';
-      case 'BCN':
-      case '71801':
-        return 'Barcelona-Sants';
-      case '22308':
-        return 'Vigo-Urzáiz';
-      case '22300':
-        return 'Vigo-Guixar';
-      case '22200':
-        return 'Pontevedra';
-      case '20200':
-        return 'Lugo';
-      case '20100':
-        return 'Monforte de Lemos';
-      case '15100':
-        return 'León';
-      case '30100':
-        return 'Zamora';
-      default:
-        return fallback;
-    }
+  static bool _isDateValue(String value) =>
+      RegExp(r'^\d{1,2}/\d{1,2}/\d{4}$').hasMatch(value) ||
+      RegExp(r'^\d{4}-\d{2}-\d{2}(?:$|T)').hasMatch(value);
+
+  static bool _clockValue(String value) =>
+      RegExp(r'^\d{1,2}:\d{2}$').hasMatch(value);
+
+  static bool _isNonStationField(String label, String key) {
+    final normalizedLabel = _normalizedField(label);
+    final normalizedKey = _normalizedField(key);
+    const metadataKeys = [
+      'fecha',
+      'date',
+      'localizador',
+      'booking',
+      'pnr',
+      'asiento',
+      'asento',
+      'plaza',
+      'seat',
+      'coche',
+      'coach',
+      'tren',
+      'train',
+      'pasajero',
+      'pasaxeiro',
+      'viajero',
+      'passenger',
+      'nombre',
+      'nome',
+      'name',
+      'clase',
+      'class',
+      'tarifa',
+      'fare',
+      'produto',
+      'producto',
+      'product',
+      'servicio',
+      'service',
+      'operador',
+      'operator',
+    ];
+    return metadataKeys.any(
+      (keyPart) =>
+          normalizedLabel.contains(keyPart) || normalizedKey.contains(keyPart),
+    );
   }
 
   static bool _looksLikeStationCode(String value) {
@@ -426,58 +460,75 @@ class PkpassParserService {
     List<Map<String, dynamic>> fields,
     List<String> matchKeys,
   ) {
-    final normalizedMatches = matchKeys
-        .map((key) => key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), ''))
-        .toSet();
+    final normalizedMatches = matchKeys.map(AdifStations.normalize).toSet();
     for (final field in fields) {
-      final key = field['key']
-              ?.toString()
-              .toLowerCase()
-              .replaceAll(RegExp(r'[^a-z0-9]'), '') ??
-          '';
-      final label = field['label']
-              ?.toString()
-              .toLowerCase()
-              .replaceAll(RegExp(r'[^a-z0-9]'), '') ??
-          '';
-      final value = field['value']?.toString().trim() ?? '';
+      final key = _normalizedField(field['key']);
+      final label = _normalizedField(field['label']);
       final isStationField = normalizedMatches.any(
         (match) => key == match || key.contains(match) || label == match,
       );
-      if (isStationField &&
-          value.isNotEmpty &&
-          !RegExp(r'^\d{1,2}:\d{2}$').hasMatch(value)) {
+      if (isStationField && _isStationFieldCandidate(field)) {
         return field;
       }
     }
     return null;
   }
 
+  static Map<String, dynamic>? _findCandidateStationField(
+    List<Map<String, dynamic>> fields, {
+    required bool first,
+  }) {
+    final candidates = fields.where(_isStationFieldCandidate).toList();
+    if (candidates.isEmpty) return null;
+    return first ? candidates.first : candidates.last;
+  }
+
+  static Map<String, dynamic>? _findPositionalStationField(
+    List<Map<String, dynamic>> fields,
+    int index,
+  ) {
+    if (index >= fields.length || !_isStationFieldCandidate(fields[index])) {
+      return null;
+    }
+    return fields[index];
+  }
+
+  static bool _isStationFieldCandidate(Map<String, dynamic> field) {
+    final label = field['label']?.toString().trim() ?? '';
+    final key = field['key']?.toString() ?? '';
+    final value = field['value']?.toString().trim() ?? '';
+    if (value.isEmpty || _isDateValue(value)) return false;
+    if (_isDateValue(field['label']?.toString() ?? '') ||
+        _normalizedField(key).contains('fecha') ||
+        _normalizedField(key).contains('date')) {
+      return false;
+    }
+    final (name, code) = _stationNameAndCode(field);
+    if (name.isEmpty && code.isEmpty) return false;
+    return !_isNonStationField(label, key) ||
+        AdifStations.byName(label) != null;
+  }
+
+  static String _normalizedField(dynamic value) =>
+      value == null ? '' : AdifStations.normalize(value.toString());
+
+  static String? _findExplicitValue(
+    List<Map<String, dynamic>> fields,
+    Set<String> keys,
+  ) {
+    for (final field in fields) {
+      final key = _normalizedField(field['key']);
+      final label = _normalizedField(field['label']);
+      if (keys.contains(key) || keys.contains(label)) {
+        final value = field['value']?.toString().trim();
+        if (value != null && value.isNotEmpty) return value;
+      }
+    }
+    return null;
+  }
+
   static String _normalizeTrainProduct(String raw) {
-    final compact = raw
-        .toUpperCase()
-        .replaceAll(RegExp(r'[._-]'), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    if (compact.isEmpty) return '';
-    if (compact.contains('REGIONAL') && compact.contains('EXP')) {
-      return 'REG.EXP.';
-    }
-    if (RegExp(r'\bCERCAN').hasMatch(compact)) return 'CERCANÍAS';
-    if (RegExp(r'\bTRENHOTEL\b').hasMatch(compact)) return 'TRENHOTEL';
-    if (RegExp(r'\bEUROMED\b').hasMatch(compact)) return 'EUROMED';
-    if (RegExp(r'\bOUIGO\b|\bOUI\b').hasMatch(compact)) return 'OUIGO';
-    if (RegExp(r'\bIRYO\b|\bIRY\b').hasMatch(compact)) return 'IRYO';
-    if (RegExp(r'\bINTERCITY\b|\bICITY\b|\bINTC\b').hasMatch(compact)) {
-      return 'INTERCITY';
-    }
-    if (RegExp(r'\bAVLO\b').hasMatch(compact)) return 'AVLO';
-    if (RegExp(r'\bALVIA\b').hasMatch(compact)) return 'ALVIA';
-    if (RegExp(r'\bAVANT\b|\bAVA\b').hasMatch(compact)) return 'AVANT';
-    if (RegExp(r'\bAVE\b|\bAVE624\b').hasMatch(compact)) return 'AVE';
-    if (RegExp(r'\bMD\b').hasMatch(compact)) return 'MD';
-    if (compact.contains('REGIONAL')) return 'REGIONAL';
-    return compact;
+    return OperatorThemes.normalizeRenfeService(raw);
   }
 
   static String _inferTrainType(RailOperator operator) {
@@ -485,7 +536,9 @@ class PkpassParserService {
       case RailOperator.renfe:
       case RailOperator.renfeAve:
       case RailOperator.renfeAvant:
+      case RailOperator.renfeAlvia:
       case RailOperator.renfeIntercity:
+      case RailOperator.renfeMd:
       case RailOperator.renfeCercanias:
       case RailOperator.renfeRegional:
         return '';

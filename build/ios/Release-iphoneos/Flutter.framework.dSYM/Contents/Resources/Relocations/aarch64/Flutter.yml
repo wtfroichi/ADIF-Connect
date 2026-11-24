@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Volumes/Work/s/w/ir/cache/builder/engine/src/out/release/Flutter.framework/Flutter'
+relocations:     []
+...

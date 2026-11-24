@@ -30,9 +30,11 @@ class TicketBarcode {
       format = BarcodeType.aztec;
     } else if (formatStr.contains('PKBarcodeFormatQR') || formatStr == 'qr') {
       format = BarcodeType.qrCode;
-    } else if (formatStr.contains('PKBarcodeFormatPDF417') || formatStr == 'pdf417') {
+    } else if (formatStr.contains('PKBarcodeFormatPDF417') ||
+        formatStr == 'pdf417') {
       format = BarcodeType.pdf417;
-    } else if (formatStr.contains('PKBarcodeFormatCode128') || formatStr == 'code128') {
+    } else if (formatStr.contains('PKBarcodeFormatCode128') ||
+        formatStr == 'code128') {
       format = BarcodeType.code128;
     }
 
@@ -64,12 +66,13 @@ class TicketModel {
   final DateTime departureTime;
   final DateTime arrivalTime;
   final String trainNumber;
-  final String trainType; // AVE, Avlo, Alvia, Iryo, etc.
+  final String trainType; // AVE, AVANT, AVLO, INTERCITY, REGIONAL, CERCANÍAS
   final String coach;
   final String seat;
   final String seatClass;
   final String? platform;
   final String passengerName;
+  final String? ticketNumber;
   final String bookingReference; // Localizador
   final TicketBarcode? barcode;
 
@@ -89,6 +92,7 @@ class TicketModel {
     required this.seatClass,
     this.platform,
     required this.passengerName,
+    this.ticketNumber,
     required this.bookingReference,
     this.barcode,
   });
@@ -112,6 +116,7 @@ class TicketModel {
       seatClass: json['seatClass'] as String,
       platform: json['platform'] as String?,
       passengerName: json['passengerName'] as String,
+      ticketNumber: json['ticketNumber'] as String?,
       bookingReference: json['bookingReference'] as String,
       barcode: json['barcode'] != null
           ? TicketBarcode.fromJson(json['barcode'] as Map<String, dynamic>)
@@ -135,6 +140,7 @@ class TicketModel {
         'seatClass': seatClass,
         if (platform != null) 'platform': platform,
         'passengerName': passengerName,
+        if (ticketNumber != null) 'ticketNumber': ticketNumber,
         'bookingReference': bookingReference,
         if (barcode != null) 'barcode': barcode!.toJson(),
       };

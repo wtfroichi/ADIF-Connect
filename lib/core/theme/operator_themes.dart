@@ -6,7 +6,9 @@ enum RailOperator {
   renfeAvlo,
   renfeAve,
   renfeAvant,
+  renfeAlvia,
   renfeIntercity,
+  renfeMd,
   renfeCercanias,
   renfeRegional,
   adif,
@@ -65,8 +67,8 @@ abstract final class OperatorThemes {
       cardBackground: Color(0x330B132B),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFC7F4FA),
-      badgeBackground: Color(0xFF00B4D8),
-      badgeText: Color(0xFF0B132B),
+      badgeBackground: Color(0xFF0B132B),
+      badgeText: Color(0xFFFFFFFF),
     ),
     RailOperator.renfeAve: OperatorStyle(
       name: 'RENFE AVE',
@@ -76,7 +78,7 @@ abstract final class OperatorThemes {
       cardBackground: Color(0x330B132B),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFD8E2F0),
-      badgeBackground: Color(0xFF1C3D6E),
+      badgeBackground: Color(0xFF0B132B),
       badgeText: Color(0xFFFFFFFF),
     ),
     RailOperator.renfeAvant: OperatorStyle(
@@ -87,24 +89,46 @@ abstract final class OperatorThemes {
       cardBackground: Color(0x330B132B),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFD8E2F0),
-      badgeBackground: Color(0xFF1C3D6E),
+      badgeBackground: Color(0xFF0B132B),
       badgeText: Color(0xFFFFFFFF),
     ),
     RailOperator.renfeIntercity: OperatorStyle(
       name: 'RENFE INTERCITY',
-      primary: Color(0xFF1B365D),
-      secondary: Color(0xFF2B5B84),
-      accent: Color(0xFF2B5B84),
-      cardBackground: Color(0x331B365D),
+      primary: Color(0xFF680A51),
+      secondary: Color(0xFFC026D3),
+      accent: Color(0xFFC026D3),
+      cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
-      textSecondary: Color(0xFFD5E3F0),
-      badgeBackground: Color(0xFF2B5B84),
+      textSecondary: Color(0xFFECC2DF),
+      badgeBackground: Color(0xFF680A51),
+      badgeText: Color(0xFFFFFFFF),
+    ),
+    RailOperator.renfeAlvia: OperatorStyle(
+      name: 'RENFE INTERCITY',
+      primary: Color(0xFF680A51),
+      secondary: Color(0xFFC026D3),
+      accent: Color(0xFFC026D3),
+      cardBackground: Color(0x33680A51),
+      textPrimary: Color(0xFFFFFFFF),
+      textSecondary: Color(0xFFECC2DF),
+      badgeBackground: Color(0xFF680A51),
+      badgeText: Color(0xFFFFFFFF),
+    ),
+    RailOperator.renfeMd: OperatorStyle(
+      name: 'RENFE REGIONAL',
+      primary: Color(0xFF680A51),
+      secondary: Color(0xFFC026D3),
+      accent: Color(0xFFC026D3),
+      cardBackground: Color(0x33680A51),
+      textPrimary: Color(0xFFFFFFFF),
+      textSecondary: Color(0xFFECC2DF),
+      badgeBackground: Color(0xFF680A51),
       badgeText: Color(0xFFFFFFFF),
     ),
     RailOperator.renfeCercanias: OperatorStyle(
       name: 'RENFE CERCANÍAS',
       primary: Color(0xFFEF3340),
-      secondary: Color(0xFF0B132B),
+      secondary: Color(0xFFEF3340),
       accent: Color(0xFFEF3340),
       cardBackground: Color(0x33EF3340),
       textPrimary: Color(0xFFFFFFFF),
@@ -114,13 +138,13 @@ abstract final class OperatorThemes {
     ),
     RailOperator.renfeRegional: OperatorStyle(
       name: 'RENFE REGIONAL',
-      primary: Color(0xFF1B365D),
-      secondary: Color(0xFF2B5B84),
-      accent: Color(0xFF2B5B84),
-      cardBackground: Color(0x331B365D),
+      primary: Color(0xFF680A51),
+      secondary: Color(0xFFC026D3),
+      accent: Color(0xFFC026D3),
+      cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
-      textSecondary: Color(0xFFD5E3F0),
-      badgeBackground: Color(0xFF2B5B84),
+      textSecondary: Color(0xFFECC2DF),
+      badgeBackground: Color(0xFF680A51),
       badgeText: Color(0xFFFFFFFF),
     ),
 
@@ -182,26 +206,119 @@ abstract final class OperatorThemes {
     return registry[operator] ?? registry[RailOperator.unknown]!;
   }
 
-  static OperatorStyle forTrain(RailOperator operator, String trainType) {
-    if (operator != RailOperator.renfe && operator != RailOperator.renfeAvlo) {
-      return of(operator);
+  static String normalizeRenfeService(String raw) {
+    final value = raw
+        .toUpperCase()
+        .replaceAll('Á', 'A')
+        .replaceAll('É', 'E')
+        .replaceAll('Í', 'I')
+        .replaceAll('Ó', 'O')
+        .replaceAll('Ú', 'U')
+        .replaceAll(RegExp(r'[^A-Z0-9 ]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    const productCodes = {
+      '2': 'AVE',
+      '3': 'AVANT',
+      '11': 'INTERCITY',
+      '13': 'INTERCITY',
+      '16': 'REGIONAL',
+      '18': 'REGIONAL',
+      '19': 'REGIONAL',
+      '28': 'AVLO',
+    };
+    if (productCodes.containsKey(value)) return productCodes[value]!;
+    if (value.contains('CERCAN') ||
+        value.contains('RODALIES') ||
+        value.contains('FEVE')) {
+      return 'CERCANÍAS';
+    }
+    if (value.contains('AVLO')) return 'AVLO';
+    if (value.contains('AVANT') || value == 'AVA') return 'AVANT';
+    if (value.contains('INTERCITY') ||
+        value.contains('INTC') ||
+        value.contains('ICITY') ||
+        value.contains('ALVIA') ||
+        value.contains('EUROMED') ||
+        value.contains('TALGO') ||
+        value.contains('TRENHOTEL')) {
+      return 'INTERCITY';
+    }
+    if (value.contains('AVE')) return 'AVE';
+    if (value.contains('REGIONAL') ||
+        value.contains('REG EXP') ||
+        value.contains('REGIONAL EXPRES') ||
+        value == 'MD' ||
+        value.contains('MEDIA DISTANCIA')) {
+      return 'REGIONAL';
+    }
+    if (value.contains('IRYO') || value == 'IRY') return 'IRYO';
+    if (value.contains('OUIGO') || value == 'OUI') return 'OUIGO';
+    return '';
+  }
+
+  static OperatorStyle forTrain(
+    RailOperator operator,
+    String trainType, {
+    bool isDark = false,
+  }) {
+    if (operator == RailOperator.iryo) return of(RailOperator.iryo);
+    if (operator == RailOperator.ouigo) return of(RailOperator.ouigo);
+
+    final product = normalizeRenfeService(trainType);
+    switch (product) {
+      case 'AVE':
+        return of(RailOperator.renfeAve);
+      case 'AVANT':
+        return _avantStyle(isDark);
+      case 'AVLO':
+        return of(RailOperator.renfeAvlo);
+      case 'INTERCITY':
+        return of(RailOperator.renfeIntercity);
+      case 'REGIONAL':
+        return of(RailOperator.renfeRegional);
+      case 'CERCANÍAS':
+        return of(RailOperator.renfeCercanias);
+      case 'IRYO':
+        return of(RailOperator.iryo);
+      case 'OUIGO':
+        return of(RailOperator.ouigo);
     }
 
-    final product = trainType.toUpperCase();
-    if (product.contains('AVLO')) return of(RailOperator.renfeAvlo);
-    if (product.contains('AVANT')) return of(RailOperator.renfeAvant);
-    if (product.contains('INTERCITY') || product.contains('INTC')) {
-      return of(RailOperator.renfeIntercity);
+    switch (operator) {
+      case RailOperator.renfeAve:
+        return of(RailOperator.renfeAve);
+      case RailOperator.renfeAvant:
+        return _avantStyle(isDark);
+      case RailOperator.renfeAvlo:
+        return of(RailOperator.renfeAvlo);
+      case RailOperator.renfeAlvia:
+      case RailOperator.renfeIntercity:
+        return of(RailOperator.renfeIntercity);
+      case RailOperator.renfeMd:
+      case RailOperator.renfeRegional:
+        return of(RailOperator.renfeRegional);
+      case RailOperator.renfeCercanias:
+        return of(RailOperator.renfeCercanias);
+      default:
+        return of(operator);
     }
-    if (product.contains('CERCAN')) return of(RailOperator.renfeCercanias);
-    if (product.contains('REGIONAL') ||
-        product == 'MD' ||
-        product.contains('REG.EXP')) {
-      return of(RailOperator.renfeRegional);
-    }
-    if (product.contains('AVE')) return of(RailOperator.renfeAve);
-    if (operator == RailOperator.renfeAvlo) return of(RailOperator.renfeAvlo);
-    return of(RailOperator.renfe);
+  }
+
+  static OperatorStyle _avantStyle(bool isDark) {
+    final style = of(RailOperator.renfeAvant);
+    if (!isDark) return style;
+    return OperatorStyle(
+      name: style.name,
+      primary: style.primary,
+      secondary: style.secondary,
+      accent: const Color(0xFF60A5FA),
+      cardBackground: style.cardBackground,
+      textPrimary: style.textPrimary,
+      textSecondary: style.textSecondary,
+      badgeBackground: style.badgeBackground,
+      badgeText: const Color(0xFF60A5FA),
+    );
   }
 
   /// Parses operator type from string identifier or pkpass passTypeIdentifier.

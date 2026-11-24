@@ -13,6 +13,9 @@ import 'services/sharing_service.dart';
 import 'services/supabase_adif_repository.dart';
 import 'services/ticket_repository.dart';
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -47,6 +50,7 @@ class AdifConnectApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
@@ -98,6 +102,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           setState(() => _currentIndex = 1);
         }
       },
+      onImportError: (message) {
+        rootScaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      },
     );
     _sharingService.init();
   }
@@ -106,59 +115,68 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final navBg = isDark ? AppTheme.darkSurface : AppTheme.lightSurface;
-    final navBorder = isDark ? AppTheme.darkCardBorder : AppTheme.lightCardBorder;
+    final navBorder =
+        isDark ? AppTheme.darkCardBorder : AppTheme.lightCardBorder;
+    final overlayStyle =
+        isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
 
-    return Scaffold(
-      backgroundColor: AppTheme.getBackgroundColor(context),
-      extendBody: true,
-      appBar: AppBar(
-        title: Text(
-          _tabTitles[_currentIndex],
-          style: TextStyle(
-            color: AppTheme.getTextPrimary(context),
-            fontWeight: FontWeight.bold,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
+        backgroundColor: AppTheme.getBackgroundColor(context),
+        extendBody: true,
+        appBar: AppBar(
+          systemOverlayStyle: overlayStyle,
+          title: Text(
+            _tabTitles[_currentIndex],
+            style: TextStyle(
+              color: AppTheme.getTextPrimary(context),
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // Tab 1: Import
-          ImportScreen(
-            ticketRepository: widget.ticketRepository,
-            onTicketImported: () => setState(() => _currentIndex = 1),
-          ),
-          // Tab 2: Tickets Wallet
-          TicketsScreen(
-            ticketRepository: widget.ticketRepository,
-          ),
-          // Tab 3: Station Board (Pantallas ADIF)
-          StationBoardScreen(
-            adifRepository: widget.adifRepository,
-          ),
-          // Tab 4: Settings
-          SettingsScreen(
-            settingsService: widget.settingsService,
-            adifRepository: widget.adifRepository,
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: GlassContainer(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            borderRadius: 32,
-            backgroundColor: navBg,
-            borderColor: navBorder,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_rounded, AppStrings.navHome, isDark),
-                _buildNavItem(1, Icons.confirmation_number_rounded, AppStrings.navTickets, isDark),
-                _buildNavItem(2, Icons.train_rounded, AppStrings.navStations, isDark),
-                _buildNavItem(3, Icons.settings_rounded, AppStrings.navSettings, isDark),
-              ],
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            ImportScreen(
+              ticketRepository: widget.ticketRepository,
+              adifRepository: widget.adifRepository,
+              onTicketImported: () => setState(() => _currentIndex = 1),
+              onShowDepartures: () => setState(() => _currentIndex = 2),
+              defaultStationCode: widget.settingsService.defaultStationCode,
+            ),
+            TicketsScreen(ticketRepository: widget.ticketRepository),
+            StationBoardScreen(
+              adifRepository: widget.adifRepository,
+              initialStationCode: widget.settingsService.defaultStationCode,
+            ),
+            SettingsScreen(
+              settingsService: widget.settingsService,
+              adifRepository: widget.adifRepository,
+            ),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: GlassContainer(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              borderRadius: 32,
+              backgroundColor: navBg,
+              borderColor: navBorder,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                      0, Icons.home_rounded, AppStrings.navHome, isDark),
+                  _buildNavItem(1, Icons.confirmation_number_rounded,
+                      AppStrings.navTickets, isDark),
+                  _buildNavItem(
+                      2, Icons.train_rounded, AppStrings.navStations, isDark),
+                  _buildNavItem(3, Icons.settings_rounded,
+                      AppStrings.navSettings, isDark),
+                ],
+              ),
             ),
           ),
         ),
@@ -169,9 +187,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _buildNavItem(int index, IconData icon, String label, bool isDark) {
     final isSelected = _currentIndex == index;
 
-    final activeBg = isDark ? AppTheme.darkNavActiveHighlight : AppTheme.lightNavActiveHighlight;
-    final activeColor = isDark ? AppTheme.darkNavActiveText : AppTheme.lightNavActiveText;
-    final inactiveColor = isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted;
+    final activeBg = isDark
+        ? AppTheme.darkNavActiveHighlight
+        : AppTheme.lightNavActiveHighlight;
+    final activeColor =
+        isDark ? AppTheme.darkNavActiveText : AppTheme.lightNavActiveText;
+    final inactiveColor =
+        isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted;
 
     final color = isSelected ? activeColor : inactiveColor;
 

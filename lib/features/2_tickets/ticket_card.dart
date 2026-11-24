@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/adif_stations.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/operator_themes.dart';
@@ -25,14 +26,16 @@ class TicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = OperatorThemes.forTrain(ticket.operator, ticket.trainType);
+    final style = OperatorThemes.forTrain(
+      ticket.operator,
+      ticket.trainType,
+      isDark: AppTheme.isDark(context),
+    );
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final onSurface = theme.colorScheme.onSurface;
     final onSurfaceVariant = theme.colorScheme.onSurfaceVariant;
-    final serviceDate = ticket.trainType.isEmpty
-        ? _formatDate(ticket.departureTime)
-        : '${ticket.trainType} · ${_formatDate(ticket.departureTime)}';
+    final serviceDate = _formatDate(ticket.departureTime);
 
     final cardBg = isDark
         ? style.primary.withValues(alpha: 0.18)
@@ -44,7 +47,7 @@ class TicketCard extends StatelessWidget {
       borderRadius: 22,
       glowColor: style.primary,
       backgroundColor: cardBg,
-      borderColor: style.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+      borderColor: AppTheme.getGlassBorder(context),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -100,14 +103,15 @@ class TicketCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ticket.origin,
+                      AdifStations.resolveName(ticket.origin),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: onSurface,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ],
                 ),
@@ -148,15 +152,16 @@ class TicketCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ticket.destination,
+                      AdifStations.resolveName(ticket.destination),
                       textAlign: TextAlign.end,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: onSurface,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ],
                 ),

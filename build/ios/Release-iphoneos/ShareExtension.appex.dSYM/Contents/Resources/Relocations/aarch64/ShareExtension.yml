@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/rprieto/VSCode/Github/ADIF-Connect/build/ios/Release-iphoneos/ShareExtension.appex/ShareExtension'
+relocations:     []
+...

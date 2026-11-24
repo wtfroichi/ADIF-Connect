@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/adif_stations.dart';
+import 'station_widget_cache.dart';
 
 class SettingsService extends ChangeNotifier {
   static const String _keyDefaultStation = 'settings_default_station';
@@ -14,7 +16,7 @@ class SettingsService extends ChangeNotifier {
     defaultValue: 'sb_publishable_inw5P8_x_530ztDwY7xnGg_gqlDCjrU',
   );
 
-  String _defaultStationCode = 'OUR';
+  String _defaultStationCode = '22100';
   bool _liveActivitiesEnabled = true;
 
   String get defaultStationCode => _defaultStationCode;
@@ -24,8 +26,14 @@ class SettingsService extends ChangeNotifier {
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _defaultStationCode = prefs.getString(_keyDefaultStation) ?? 'OUR';
+      final savedStation = prefs.getString(_keyDefaultStation) ?? '22100';
+      _defaultStationCode =
+          AdifStations.byCode(savedStation)?.adifCode ?? '22100';
       _liveActivitiesEnabled = prefs.getBool(_keyLiveActivities) ?? true;
+      final station = AdifStations.byCode(_defaultStationCode);
+      if (station != null) {
+        await StationWidgetCache.updateDefaultStation(station);
+      }
       notifyListeners();
     } catch (_) {}
   }
@@ -39,6 +47,10 @@ class SettingsService extends ChangeNotifier {
     if (defaultStationCode != null) {
       _defaultStationCode = defaultStationCode;
       await prefs.setString(_keyDefaultStation, _defaultStationCode);
+      final station = AdifStations.byCode(_defaultStationCode);
+      if (station != null) {
+        await StationWidgetCache.updateDefaultStation(station);
+      }
     }
     if (liveActivitiesEnabled != null) {
       _liveActivitiesEnabled = liveActivitiesEnabled;

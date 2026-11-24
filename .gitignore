@@ -1,0 +1,32 @@
+# Flutter/Dart generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+coverage/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+.env.json
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# iOS generated data
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/DerivedData/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
+# IDE
+.idea/
+*.iml
+*.swp

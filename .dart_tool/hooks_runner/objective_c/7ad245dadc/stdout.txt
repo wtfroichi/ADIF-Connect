@@ -1,0 +1,49 @@
+Running `(cd /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/; TMPDIR=/var/folders/48/hcqmvfwd0js7yjcyw30b6f780000gn/T/ PATH=/opt/homebrew/opt/python@3.15/libexec/bin:/Users/rprieto/.swiftly/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep-universal/bin/darwin-arm64:/Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@github/copilot-sdk-darwin-arm64/ripgrep/bin/darwin-arm64 HOME=/Users/rprieto /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart --packages=/Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/package_config.json /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/objective_c/7ad245dadc/hook.dill --config=/Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/objective_c/7ad245dadc/input.json )`.
+INFO: 2026-11-23 22:41:23.625328: Using compiler /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang from BuildInput.cCompiler.cc.
+
+INFO: 2026-11-23 22:41:23.630676: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/include/dart_api_dl.c -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-11-23 22:41:23.632104: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/objective_c.c -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.c.o
+
+INFO: 2026-11-23 22:41:23.632439: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/objective_c.m -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.m.o
+
+ream_adapter.m.o
+
+INFO: 2026-11-23 22:41:23.632574: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/observer.m -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/observer.m.o
+
+INFO: 2026-11-23 22:41:23.632753: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/ns_number.m -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/ns_number.m.o
+
+INFO: 2026-11-23 22:41:23.633156: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/rprieto/.pub-cache/hosted/pub.dev/objective_c-9.6.4/src/objective_c_bindings_generated.m -fpic -gline-tables-only -I src -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-11-23 22:41:24.177468: 
+INFO: 2026-11-23 22:41:24.177576: 
+INFO: 2026-11-23 22:41:24.177608: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.c.o
+
+dl.c.o
+
+INFO: 2026-11-23 22:41:24.180999: 
+INFO: 2026-11-23 22:41:24.181094: 
+INFO: 2026-11-23 22:41:24.181124: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/protocol.m.o
+
+INFO: 2026-11-23 22:41:24.707336: 
+INFO: 2026-11-23 22:41:24.707411: 
+INFO: 2026-11-23 22:41:24.707427: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/ns_number.m.o
+
+INFO: 2026-11-23 22:41:24.738564: 
+INFO: 2026-11-23 22:41:24.738821: 
+INFO: 2026-11-23 22:41:24.738851: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.m.o
+
+INFO: 2026-11-23 22:41:24.752578: 
+INFO: 2026-11-23 22:41:24.752699: 
+INFO: 2026-11-23 22:41:24.752731: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-11-23 22:41:24.838131: 
+INFO: 2026-11-23 22:41:24.838187: 
+INFO: 2026-11-23 22:41:24.838201: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-11-23 22:41:24.839450: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -shared -Wl,-encryptable -undefined dynamic_lookup -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-darwin -mmacos-version-min=13 -framework Foundation /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/include/dart_api_dl.c.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.c.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/input_stream_adapter.m.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c.m.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/observer.m.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/ns_number.m.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/protocol.m.o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/obj/src/objective_c_bindings_generated.m.o -o /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/objective_c.dylib
+
+INFO: 2026-11-23 22:41:25.096003: 
+INFO: 2026-11-23 22:41:25.096050: 
+INFO: 2026-11-23 22:41:25.096062: Generated /Users/rprieto/VSCode/Github/ADIF-Connect/.dart_tool/hooks_runner/shared/objective_c/build/7ad245dadc/objective_c.dylib
+

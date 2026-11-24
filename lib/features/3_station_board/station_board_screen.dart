@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/adif_stations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/glass_container.dart';
+import '../../core/widgets/station_picker_field.dart';
 import '../../models/station_board_model.dart';
 import '../../services/adif_live_repository.dart';
 import 'station_board_row.dart';
 
 class StationBoardScreen extends StatefulWidget {
   final AdifLiveRepository adifRepository;
+  final String initialStationCode;
 
   const StationBoardScreen({
     super.key,
     required this.adifRepository,
+    required this.initialStationCode,
   });
 
   @override
@@ -24,20 +28,35 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
   BoardType _currentBoard = BoardType.departures;
   List<StationBoardItem> _items = [];
   bool _isLoading = true;
+  bool _hasLoadError = false;
   late Timer _clockTimer;
   DateTime _currentTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _selectedStation = widget.adifRepository.getAvailableStations().first;
+    _currentTime = _madridNow();
+    final stations = widget.adifRepository.getAvailableStations();
+    _selectedStation =
+        AdifStations.byCode(widget.initialStationCode) ?? stations.first;
     _fetchBoardData();
 
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) {
-        setState(() => _currentTime = DateTime.now());
+        setState(() => _currentTime = _madridNow());
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant StationBoardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialStationCode == oldWidget.initialStationCode) return;
+    final stations = widget.adifRepository.getAvailableStations();
+    final station =
+        AdifStations.byCode(widget.initialStationCode) ?? stations.first;
+    setState(() => _selectedStation = station);
+    _fetchBoardData();
   }
 
   @override
@@ -47,30 +66,87 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
   }
 
   Future<void> _fetchBoardData() async {
-    setState(() => _isLoading = true);
-    final data = _currentBoard == BoardType.departures
-        ? await widget.adifRepository.getDepartures(_selectedStation.code)
-        : await widget.adifRepository.getArrivals(_selectedStation.code);
+    setState(() {
+      _isLoading = true;
+      _hasLoadError = false;
+    });
+    try {
+      final data = _currentBoard == BoardType.departures
+          ? await widget.adifRepository.getDepartures(_selectedStation.code)
+          : await widget.adifRepository.getArrivals(_selectedStation.code);
+      final items = _filterAndSortByTime(data, _madridNow());
 
-    if (mounted) {
-      setState(() {
-        _items = data;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _items = const [];
+          _hasLoadError = true;
+          _isLoading = false;
+        });
+      }
     }
   }
 
+  List<StationBoardItem> _filterAndSortByTime(
+    List<StationBoardItem> items,
+    DateTime now,
+  ) {
+    final nowMinutes = now.hour * 60 + now.minute;
+    final visible = items.where((item) {
+      final match = RegExp(r'^(\d{2}):(\d{2})$').firstMatch(item.scheduledTime);
+      if (match == null) return false;
+      final scheduledMinutes =
+          int.parse(match.group(1)!) * 60 + int.parse(match.group(2)!);
+      final offset = scheduledMinutes - nowMinutes;
+      return offset >= -10 && offset <= 24 * 60;
+    }).toList()
+      ..sort((a, b) {
+        final timeOrder = a.scheduledTime.compareTo(b.scheduledTime);
+        return timeOrder != 0
+            ? timeOrder
+            : a.trainNumber.compareTo(b.trainNumber);
+      });
+    return visible;
+  }
+
+  DateTime _madridNow() {
+    final utc = DateTime.now().toUtc();
+    final marchLastDay = DateTime.utc(utc.year, 3, 31);
+    final octoberLastDay = DateTime.utc(utc.year, 10, 31);
+    final summerStarts = DateTime.utc(
+      utc.year,
+      3,
+      31 - marchLastDay.weekday % 7,
+      1,
+    );
+    final summerEnds = DateTime.utc(
+      utc.year,
+      10,
+      31 - octoberLastDay.weekday % 7,
+      1,
+    );
+    final isSummer = !utc.isBefore(summerStarts) && utc.isBefore(summerEnds);
+    return utc.add(Duration(hours: isSummer ? 2 : 1));
+  }
+
   String _formatLiveClock(DateTime dt) {
-    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final stations = widget.adifRepository.getAvailableStations();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      color: isDark ? AppTheme.adifNavyBackground : AppTheme.adifMint,
+      color: isDark
+          ? AppTheme.stationDarkBackground
+          : AppTheme.stationLightBackground,
       child: Column(
         children: [
           // ADIF Board Header: Station Selector & Live Clock
@@ -79,70 +155,50 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
             child: GlassContainer(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               borderRadius: 18,
-              backgroundColor: AppTheme.adifPrimary,
-              borderColor: AppTheme.adifLime.withValues(alpha: 0.55),
-              glowColor: AppTheme.adifPrimary,
+              backgroundColor:
+                  isDark ? AppTheme.stationDarkCard : AppTheme.stationLightCard,
+              borderColor: isDark
+                  ? AppTheme.stationDarkBorder
+                  : AppTheme.stationLightBorder,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Station dropdown
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<StationInfo>(
-                      value: _selectedStation,
-                      dropdownColor: AppTheme.adifPrimary,
-                      icon: const Icon(Icons.arrow_drop_down,
-                          color: AppTheme.adifLime),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      items: stations.map((s) {
-                        return DropdownMenuItem<StationInfo>(
-                          value: s,
-                          child: Text(s.name),
-                        );
-                      }).toList(),
-                      onChanged: (newStation) {
-                        if (newStation != null) {
-                          setState(() => _selectedStation = newStation);
-                          _fetchBoardData();
-                        }
+                  Expanded(
+                    child: StationPickerField(
+                      label: AppStrings.stationSelectorLabel,
+                      value: AdifStations.byCode(_selectedStation.adifCode),
+                      borderColor: isDark
+                          ? AppTheme.darkInputBorder
+                          : AppTheme.lightInputBorder,
+                      accentColor: AppTheme.adifPrimary,
+                      onChanged: (station) {
+                        setState(() => _selectedStation = station);
+                        _fetchBoardData();
                       },
                     ),
                   ),
 
-                  // ADIF Live Official Clock with Lime Accent
+                  // Muted local clock, styled as a secondary status indicator.
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppTheme.adifNavyBackground,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.adifMint.withValues(alpha: 0.45),
-                        width: 1,
-                      ),
+                      color: isDark
+                          ? const Color(0xFF1E2631)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.adifLime,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
                         Text(
                           _formatLiveClock(_currentTime),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                            fontFeatures: [FontFeature.tabularFigures()],
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppTheme.darkTextSecondary
+                                : AppTheme.lightTextSecondary,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ],
@@ -160,8 +216,8 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppTheme.adifMint.withValues(alpha: 0.08)
-                    : AppTheme.adifTeal.withValues(alpha: 0.12),
+                    ? AppTheme.stationDarkCard
+                    : AppTheme.stationLightCard,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -187,7 +243,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppTheme.adifLime,
+                      color: AppTheme.adifTeal,
                     ),
                   )
                 : _items.isEmpty
@@ -205,7 +261,9 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                AppStrings.stationNoTrains,
+                                _hasLoadError
+                                    ? AppStrings.stationBoardLoadError
+                                    : AppStrings.stationNoTrains,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: isDark
@@ -220,7 +278,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
                               ElevatedButton.icon(
                                 onPressed: _fetchBoardData,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.adifTeal,
+                                  backgroundColor: AppTheme.adifPrimary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -240,12 +298,14 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
                         ),
                       )
                     : RefreshIndicator(
-                        color: AppTheme.adifLime,
-                        backgroundColor: AppTheme.adifPrimary,
+                        color: AppTheme.adifPrimary,
+                        backgroundColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.stationDarkCard
+                                : AppTheme.stationLightCard,
                         onRefresh: _fetchBoardData,
                         child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
                           itemCount: _items.length,
                           itemBuilder: (context, index) {
                             return StationBoardRow(

@@ -80,7 +80,7 @@ class _TrainSilhouettePainter extends CustomPainter {
       canvas.drawPath(path, paint);
       canvas.drawPath(windowPath, windowPaint);
     } else {
-      // Classic regional / commuter nose (Alvia / MD / Cercanías)
+      // Classic regional and commuter nose.
       path.moveTo(0, h * 0.85);
       path.lineTo(w * 0.80, h * 0.85);
       path.cubicTo(w * 0.95, h * 0.85, w, h * 0.75, w, h * 0.55);
@@ -104,6 +104,7 @@ class _TrainSilhouettePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TrainSilhouettePainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.isBulletTrain != isBulletTrain;
+    return oldDelegate.color != color ||
+        oldDelegate.isBulletTrain != isBulletTrain;
   }
 }
