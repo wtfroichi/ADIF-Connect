@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/constants/adif_stations.dart';
 import '../../core/constants/app_strings.dart';
@@ -8,6 +11,7 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/station_picker_field.dart';
 import '../../services/adif_live_repository.dart';
 import '../../services/settings_service.dart';
+import '../../services/station_location_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final SettingsService settingsService;
@@ -25,20 +29,41 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late bool _liveActivities;
+  late bool _useNearestStation;
   late String _defaultStation;
+  bool _isLocatingNearest = false;
 
   @override
   void initState() {
     super.initState();
     final s = widget.settingsService;
     _liveActivities = s.liveActivitiesEnabled;
+    _useNearestStation = s.useNearestStation;
     _defaultStation = s.defaultStationCode;
+    s.addListener(_syncSettingsFromService);
+  }
+
+  @override
+  void dispose() {
+    widget.settingsService.removeListener(_syncSettingsFromService);
+    super.dispose();
+  }
+
+  void _syncSettingsFromService() {
+    if (!mounted) return;
+    final service = widget.settingsService;
+    setState(() {
+      _liveActivities = service.liveActivitiesEnabled;
+      _useNearestStation = service.useNearestStation;
+      _defaultStation = service.defaultStationCode;
+    });
   }
 
   Future<void> _saveSettings() async {
     await widget.settingsService.updateSettings(
       liveActivitiesEnabled: _liveActivities,
       defaultStationCode: _defaultStation,
+      useNearestStation: _useNearestStation,
     );
 
     if (mounted) {
@@ -48,6 +73,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
           backgroundColor: AppTheme.adifTeal,
         ),
       );
+    }
+  }
+
+  Future<void> _selectNearestStation() async {
+    if (_isLocatingNearest) return;
+    setState(() => _isLocatingNearest = true);
+    try {
+      final station = await StationLocationService().findNearestStation();
+      await widget.settingsService.updateSettings(
+        defaultStationCode: station.adifCode,
+        useNearestStation: true,
+      );
+      if (!mounted) return;
+      setState(() {
+        _defaultStation = station.adifCode;
+        _useNearestStation = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${AppStrings.stationDefaultUpdated}: ${station.name}',
+          ),
+          backgroundColor: AppTheme.adifTeal,
+        ),
+      );
+    } on StationLocationException catch (error) {
+      if (!mounted) return;
+      final message = switch (error.failure) {
+        StationLocationFailure.serviceDisabled =>
+          AppStrings.stationLocationServiceDisabled,
+        StationLocationFailure.permissionDenied =>
+          AppStrings.stationLocationPermissionDenied,
+        StationLocationFailure.permissionDeniedForever =>
+          AppStrings.stationLocationPermissionDeniedForever,
+        StationLocationFailure.stationNotFound =>
+          AppStrings.stationNearestUnavailable,
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } on PlatformException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.stationNearestUnavailable)),
+      );
+    } on TimeoutException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.stationNearestUnavailable)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLocatingNearest = false);
     }
   }
 
@@ -118,16 +195,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: onSurface,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  AppStrings.settingsNearestStationDescription,
+                  style: TextStyle(fontSize: 13, color: onSurfaceVariant),
+                ),
                 const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton.filled(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    onPressed:
+                        _isLocatingNearest ? null : _selectNearestStation,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isLocatingNearest)
+                          const CupertinoActivityIndicator(
+                            color: CupertinoColors.white,
+                          )
+                        else
+                          const Icon(CupertinoIcons.location_fill, size: 17),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isLocatingNearest
+                              ? AppStrings.stationNearestLoading
+                              : AppStrings.stationNearestAction,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
                 StationPickerField(
                   label: AppStrings.settingsDefaultStation,
-                  value:
-                      AdifStations.byCode(_defaultStation) ??
+                  value: AdifStations.byCode(_defaultStation) ??
                       (stations.isNotEmpty ? stations.first : null),
                   onChanged: (station) {
-                    setState(() => _defaultStation = station.adifCode);
+                    setState(() {
+                      _defaultStation = station.adifCode;
+                      _useNearestStation = false;
+                    });
                     _saveSettings();
                   },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _useNearestStation
+                      ? '${AppStrings.stationIsDefault} · ${AppStrings.stationNearestAction}'
+                      : AppStrings.stationCoordinatesCredit,
+                  style: TextStyle(fontSize: 12, color: onSurfaceVariant),
                 ),
               ],
             ),
@@ -174,7 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // About Card & Renfe / ADIF System Theme
+          // About card
           GlassContainer(
             padding: const EdgeInsets.all(18),
             borderRadius: 20,
@@ -199,27 +316,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.adifTeal.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppTheme.adifTeal.withValues(alpha: 0.4),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Text(
-                    'RENFE / ADIF iOS 27',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.adifTeal,
-                    ),
-                  ),
+                const Icon(
+                  CupertinoIcons.train_style_one,
+                  color: AppTheme.adifTeal,
+                  size: 24,
                 ),
               ],
             ),

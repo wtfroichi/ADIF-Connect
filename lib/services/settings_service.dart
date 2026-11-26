@@ -5,6 +5,7 @@ import 'station_widget_cache.dart';
 
 class SettingsService extends ChangeNotifier {
   static const String _keyDefaultStation = 'settings_default_station';
+  static const String _keyNearestStation = 'settings_nearest_station';
   static const String _keyLiveActivities = 'settings_live_activities_enabled';
 
   static const String supabaseUrl = String.fromEnvironment(
@@ -17,9 +18,11 @@ class SettingsService extends ChangeNotifier {
   );
 
   String _defaultStationCode = '22100';
+  bool _useNearestStation = false;
   bool _liveActivitiesEnabled = true;
 
   String get defaultStationCode => _defaultStationCode;
+  bool get useNearestStation => _useNearestStation;
   bool get liveActivitiesEnabled => _liveActivitiesEnabled;
   bool get useLiveSupabase => true;
 
@@ -29,6 +32,7 @@ class SettingsService extends ChangeNotifier {
       final savedStation = prefs.getString(_keyDefaultStation) ?? '22100';
       _defaultStationCode =
           AdifStations.byCode(savedStation)?.adifCode ?? '22100';
+      _useNearestStation = prefs.getBool(_keyNearestStation) ?? false;
       _liveActivitiesEnabled = prefs.getBool(_keyLiveActivities) ?? true;
       final station = AdifStations.byCode(_defaultStationCode);
       if (station != null) {
@@ -40,6 +44,7 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> updateSettings({
     String? defaultStationCode,
+    bool? useNearestStation,
     bool? liveActivitiesEnabled,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -51,6 +56,10 @@ class SettingsService extends ChangeNotifier {
       if (station != null) {
         await StationWidgetCache.updateDefaultStation(station);
       }
+    }
+    if (useNearestStation != null) {
+      _useNearestStation = useNearestStation;
+      await prefs.setBool(_keyNearestStation, _useNearestStation);
     }
     if (liveActivitiesEnabled != null) {
       _liveActivitiesEnabled = liveActivitiesEnabled;

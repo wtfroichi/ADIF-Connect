@@ -1,8 +1,11 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
-import 'core/widgets/glass_container.dart';
+import 'core/widgets/liquid_glass_container.dart';
 import 'features/1_import/import_screen.dart';
 import 'features/2_tickets/tickets_screen.dart';
 import 'features/3_station_board/station_board_screen.dart';
@@ -19,6 +22,14 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
 
   final settingsService = SettingsService();
   await settingsService.init();
@@ -95,6 +106,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   @override
   void initState() {
     super.initState();
+    widget.settingsService.addListener(_onSettingsChanged);
     _sharingService = SharingService(
       ticketRepository: widget.ticketRepository,
       onTicketImported: () {
@@ -111,12 +123,19 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     _sharingService.init();
   }
 
+  void _onSettingsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.settingsService.removeListener(_onSettingsChanged);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final navBg = isDark ? AppTheme.darkSurface : AppTheme.lightSurface;
-    final navBorder =
-        isDark ? AppTheme.darkCardBorder : AppTheme.lightCardBorder;
     final overlayStyle =
         isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
 
@@ -126,13 +145,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         backgroundColor: AppTheme.getBackgroundColor(context),
         extendBody: true,
         appBar: AppBar(
+          centerTitle: Platform.isIOS,
+          toolbarHeight: Platform.isIOS ? 44 : null,
           systemOverlayStyle: overlayStyle,
           title: Text(
             _tabTitles[_currentIndex],
-            style: TextStyle(
-              color: AppTheme.getTextPrimary(context),
-              fontWeight: FontWeight.bold,
-            ),
           ),
         ),
         body: IndexedStack(
@@ -148,6 +165,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             TicketsScreen(ticketRepository: widget.ticketRepository),
             StationBoardScreen(
               adifRepository: widget.adifRepository,
+              settingsService: widget.settingsService,
               initialStationCode: widget.settingsService.defaultStationCode,
             ),
             SettingsScreen(
@@ -156,73 +174,127 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             ),
           ],
         ),
-        bottomNavigationBar: SafeArea(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: GlassContainer(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-              borderRadius: 32,
-              backgroundColor: navBg,
-              borderColor: navBorder,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                      0, Icons.home_rounded, AppStrings.navHome, isDark),
-                  _buildNavItem(1, Icons.confirmation_number_rounded,
-                      AppStrings.navTickets, isDark),
-                  _buildNavItem(
-                      2, Icons.train_rounded, AppStrings.navStations, isDark),
-                  _buildNavItem(3, Icons.settings_rounded,
-                      AppStrings.navSettings, isDark),
+        bottomNavigationBar: Platform.isIOS
+            ? SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+                  child: LiquidGlassContainer(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 6,
+                    ),
+                    borderRadius: 28,
+                    blurSigma: 12,
+                    child: Row(
+                      children: [
+                        _buildNavItem(
+                          0,
+                          CupertinoIcons.house_fill,
+                          AppStrings.navHome,
+                          isDark,
+                        ),
+                        _buildNavItem(
+                          1,
+                          CupertinoIcons.ticket_fill,
+                          AppStrings.navTickets,
+                          isDark,
+                        ),
+                        _buildNavItem(
+                          2,
+                          CupertinoIcons.train_style_one,
+                          AppStrings.navStations,
+                          isDark,
+                        ),
+                        _buildNavItem(
+                          3,
+                          CupertinoIcons.gear_alt_fill,
+                          AppStrings.navSettings,
+                          isDark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            : NavigationBar(
+                selectedIndex: _currentIndex,
+                onDestinationSelected: (index) =>
+                    setState(() => _currentIndex = index),
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: AppStrings.navHome,
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.confirmation_number_outlined),
+                    selectedIcon: Icon(Icons.confirmation_number),
+                    label: AppStrings.navTickets,
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.train_outlined),
+                    selectedIcon: Icon(Icons.train),
+                    label: AppStrings.navStations,
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: AppStrings.navSettings,
+                  ),
                 ],
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildNavItem(int index, IconData icon, String label, bool isDark) {
-    final isSelected = _currentIndex == index;
-
-    final activeBg = isDark
-        ? AppTheme.darkNavActiveHighlight
-        : AppTheme.lightNavActiveHighlight;
+    final selected = _currentIndex == index;
     final activeColor =
-        isDark ? AppTheme.darkNavActiveText : AppTheme.lightNavActiveText;
-    final inactiveColor =
-        isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted;
+        isDark ? AppTheme.adifPlatformDarkText : AppTheme.adifPrimary;
+    final inactiveColor = CupertinoColors.secondaryLabel.resolveFrom(context);
 
-    final color = isSelected ? activeColor : inactiveColor;
-
-    return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? activeBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 22),
-            if (isSelected) ...[
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(44, 54),
+          onPressed: () => setState(() => _currentIndex = index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            decoration: BoxDecoration(
+              color: selected
+                  ? (isDark
+                      ? AppTheme.adifNavDarkSurface.withValues(alpha: 0.88)
+                      : AppTheme.adifMint.withValues(alpha: 0.62))
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(21),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon,
+                    size: 19, color: selected ? activeColor : inactiveColor),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected ? activeColor : inactiveColor,
+                    fontSize: 10,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

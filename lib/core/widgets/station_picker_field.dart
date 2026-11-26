@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'dart:math' as math;
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../constants/adif_stations.dart';
 import '../constants/app_strings.dart';
@@ -21,12 +24,17 @@ class StationPickerField extends StatelessWidget {
   });
 
   Future<void> _selectStation(BuildContext context) async {
-    final station = await showModalBottomSheet<StationInfo>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const _StationPickerSheet(),
-    );
+    final station = Platform.isIOS
+        ? await showCupertinoModalPopup<StationInfo>(
+            context: context,
+            builder: (context) => const _StationPickerSheet(),
+          )
+        : await showModalBottomSheet<StationInfo>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const _StationPickerSheet(),
+          );
     if (station != null) onChanged(station);
   }
 
@@ -34,6 +42,51 @@ class StationPickerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSurface;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    if (Platform.isIOS) {
+      return CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => _selectStation(context),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(color: muted, fontSize: 12),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      value?.name ?? AppStrings.stationPickerHint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: value == null ? muted : color,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                CupertinoIcons.chevron_down,
+                size: 16,
+                color: muted,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       onTap: () => _selectStation(context),
       borderRadius: BorderRadius.circular(18),
@@ -110,81 +163,137 @@ class _StationPickerSheetState extends State<_StationPickerSheet> {
         )
         .toDouble();
 
+    final isIOS = Platform.isIOS;
     return Padding(
       padding: EdgeInsets.only(bottom: keyboardInset),
       child: SizedBox(
         height: sheetHeight,
-        child: Container(
-          padding: const EdgeInsets.only(
-            top: 16,
-            left: 20,
-            right: 20,
-            bottom: 16,
-          ),
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppTheme.getBackgroundColor(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            color: isIOS
+                ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
+                : AppTheme.getBackgroundColor(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              TextField(
-                autofocus: true,
-                onChanged: (value) => setState(() => _query = value),
-                decoration: InputDecoration(
-                  hintText: AppStrings.stationsSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide(
-                      color: AppTheme.isDark(context)
-                          ? AppTheme.darkInputBorder
-                          : AppTheme.lightInputBorder,
-                      width: 1.2,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide(
-                      color: AppTheme.isDark(context)
-                          ? AppTheme.darkInputBorder
-                          : AppTheme.lightInputBorder,
-                      width: 1.2,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(
-                      color: AppTheme.adifTeal,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: stations.isEmpty
-                    ? Center(
-                        child: Text(
-                          AppStrings.stationsNoResults,
-                          style: TextStyle(color: onSurface),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Column(
+                children: [
+                  if (isIOS)
+                    CupertinoSearchTextField(
+                      autofocus: true,
+                      placeholder: AppStrings.stationsSearchHint,
+                      onChanged: (value) => setState(() => _query = value),
+                    )
+                  else
+                    TextField(
+                      autofocus: true,
+                      onChanged: (value) => setState(() => _query = value),
+                      decoration: InputDecoration(
+                        hintText: AppStrings.stationsSearchHint,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: AppTheme.isDark(context)
+                                ? AppTheme.darkInputBorder
+                                : AppTheme.lightInputBorder,
+                            width: 1.2,
+                          ),
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: stations.length,
-                        itemBuilder: (context, index) {
-                          final station = stations[index];
-                          return ListTile(
-                            title: Text(station.name,
-                                style: TextStyle(color: onSurface)),
-                            subtitle: Text(
-                                '${station.province} · ${station.adifCode}'),
-                            onTap: () => Navigator.of(context).pop(station),
-                          );
-                        },
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: AppTheme.isDark(context)
+                                ? AppTheme.darkInputBorder
+                                : AppTheme.lightInputBorder,
+                            width: 1.2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(
+                            color: AppTheme.adifTeal,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
+                    ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: stations.isEmpty
+                        ? Center(
+                            child: Text(
+                              AppStrings.stationsNoResults,
+                              style: TextStyle(color: onSurface),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: stations.length,
+                            itemBuilder: (context, index) {
+                              final station = stations[index];
+                              if (isIOS) {
+                                return CupertinoButton(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 10,
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(station),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              station.name,
+                                              style: TextStyle(
+                                                color: onSurface,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              '${station.province} · ${station.adifCode}',
+                                              style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        CupertinoIcons.chevron_right,
+                                        size: 15,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              return ListTile(
+                                title: Text(station.name,
+                                    style: TextStyle(color: onSurface)),
+                                subtitle: Text(
+                                    '${station.province} · ${station.adifCode}'),
+                                onTap: () => Navigator.of(context).pop(station),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

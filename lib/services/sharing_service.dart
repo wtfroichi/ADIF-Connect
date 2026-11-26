@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'pdf_ticket_parser_service.dart';
 import 'pkpass_parser_service.dart';
 import 'ticket_repository.dart';
+import 'google_wallet_jwt_parser.dart';
 
 class SharingService with WidgetsBindingObserver {
   static const MethodChannel _channel =
@@ -35,6 +36,12 @@ class SharingService with WidgetsBindingObserver {
           return;
         case 'onImportInbox':
           await _processSharedInbox();
+          return;
+        case 'onWalletUrlReceived':
+          final url = call.arguments as String?;
+          if (url != null && url.isNotEmpty) {
+            await _processWalletUrl(url);
+          }
           return;
       }
     });
@@ -81,6 +88,18 @@ class SharingService with WidgetsBindingObserver {
       _reportError(error.message ?? error.code);
     } finally {
       _isReadingInbox = false;
+    }
+  }
+
+  Future<void> _processWalletUrl(String url) async {
+    try {
+      final tickets = GoogleWalletJwtParser.parseSaveLink(url);
+      for (final ticket in tickets) {
+        await ticketRepository.saveTicket(ticket);
+      }
+      if (tickets.isNotEmpty) onTicketImported();
+    } catch (error) {
+      _reportError(error.toString());
     }
   }
 

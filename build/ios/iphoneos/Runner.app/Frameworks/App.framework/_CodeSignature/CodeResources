@@ -18,7 +18,7 @@
 		</data>
 		<key>flutter_assets/NOTICES.Z</key>
 		<data>
-		/KeL/+0QiEAhZhlQq6jbi8i5j0o=
+		qSdz0tqN/9IxG7IqFFeCPVHBJDM=
 		</data>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
 		<data>
@@ -26,23 +26,15 @@
 		</data>
 		<key>flutter_assets/fonts/MaterialIcons-Regular.otf</key>
 		<data>
-		/CUoTuPQqqdexfyOT9lpJhV+2MQ=
-		</data>
-		<key>flutter_assets/isolate_snapshot_data</key>
-		<data>
-		5eH08NPJ+ibUCZaQoWQ1AXUmjdA=
-		</data>
-		<key>flutter_assets/kernel_blob.bin</key>
-		<data>
-		hO5slydB69utduMfyTNXEI9NF4Y=
+		YNxlePCbFMIVNwt7pLuTLIlMoLM=
 		</data>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
-		Bvk+P1ykE1PGRdktwgwDyz6AOqM=
+		qkl1CxXJaAYOjLFiGf8LO84w4ak=
 		</data>
 		<key>flutter_assets/packages/flutter_lucide/lib/fonts/lucide.ttf</key>
 		<data>
-		SZyTW7rDKhD6sv8pbZZpviVAIzU=
+		I4QrncEMxHB9Dt2btvd619DBTgE=
 		</data>
 		<key>flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
@@ -51,10 +43,6 @@
 		<key>flutter_assets/shaders/stretch_effect.frag</key>
 		<data>
 		oF3vzikJfeSpIcWLzeBHGrs5u+w=
-		</data>
-		<key>flutter_assets/vm_snapshot_data</key>
-		<data>
-		2jmj7l5rSw0yVb/vlWAYkK/YBwk=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -77,7 +65,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			z3Kqxu2nYjMp0vG7DvVZ8yArW5AB5J9NLzvzTjhreLI=
+			l/2azgDJVDE2YbptiEW5cYq4GHhdkckTAvjylvxl4Y0=
 			</data>
 		</dict>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
@@ -91,35 +79,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			2YZbZxoJ1oPROoYwidiCXg9ho3aWzl19RIvIAjqmJFM=
-			</data>
-		</dict>
-		<key>flutter_assets/isolate_snapshot_data</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			hmajMGUf13q0oAQoju1FcfmrYvF6ZPjzL6YMKB9SlqI=
-			</data>
-		</dict>
-		<key>flutter_assets/kernel_blob.bin</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			ud6tS33hRLobIs01ZMFvG80SWRDZ6w5HtiR34B5qI6E=
+			uGPt0ZPSm+FnxWu1VFrIqfPNMF/s5eJbkzWpy5Anutc=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z8RP6Rg7AC553ef2l34piGYcmj5KPF/OloeH79vtgjw=
+			u0kNva9n94O1gPIz5G14AiwwiMrtbojUuGP4wKJt9Ek=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/flutter_lucide/lib/fonts/lucide.ttf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			AALZL8yCnN/2P3hxfsF3NDem5V71EsYtFo2kHf6yvUs=
+			PFAcb/1Kt0ohOOU0jvg4fdtTKZYb5O1ccw7QtqYEITA=
 			</data>
 		</dict>
 		<key>flutter_assets/shaders/ink_sparkle.frag</key>
@@ -134,13 +108,6 @@
 			<key>hash2</key>
 			<data>
 			Ic3y7MmxE2cfsihiDZUuuuDxAqeKOanfibbr32rsMVo=
-			</data>
-		</dict>
-		<key>flutter_assets/vm_snapshot_data</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
 			</data>
 		</dict>
 	</dict>

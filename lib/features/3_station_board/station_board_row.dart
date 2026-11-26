@@ -43,28 +43,26 @@ class StationBoardRow extends StatelessWidget {
         : Colors.white;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: borderColor,
-          width: 1.2,
+          width: 0.8,
         ),
       ),
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top Row: Scheduled Time, Train Badge + Silhouette, Platform
           Row(
             children: [
-              // High-Contrast LED style time
               Text(
                 item.scheduledTime,
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
                   color: primaryText,
                   letterSpacing: -0.5,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -94,11 +92,8 @@ class StationBoardRow extends StatelessWidget {
                 ),
               ],
               const Spacer(),
-
-              // Platform remains neutral unless the service confirms a value.
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
                   color: platform != null
                       ? isDark
@@ -121,8 +116,8 @@ class StationBoardRow extends StatelessWidget {
                       ? '${AppStrings.stationVia} $platform'
                       : AppStrings.ticketPlatformPending,
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: platform != null
                         ? isDark
                             ? AppTheme.adifPlatformDarkText
@@ -135,38 +130,42 @@ class StationBoardRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(
-                child: _productBadge(
-                  item.trainType,
-                  AppTheme.isDark(context),
+              _productBadge(item.trainType, AppTheme.isDark(context)),
+              const SizedBox(width: 8),
+              Text(
+                '${AppStrings.stationTrain} ${item.trainNumber}',
+                style: TextStyle(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-
-          // Middle Row: Destination & Train Number
           Row(
             children: [
               Expanded(
                 child: Text(
                   targetStation,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                     color: primaryText,
+                    height: 1.2,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-
-          // Stops list (if any)
           if (item.stops.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
@@ -181,27 +180,24 @@ class StationBoardRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
-          const SizedBox(height: 8),
-
-          // Bottom status row
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBackground,
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Text(
-                  item.status.label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: statusForeground,
-                  ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusBackground,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(
+                item.status.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: statusForeground,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -216,26 +212,21 @@ class StationBoardRow extends StatelessWidget {
     );
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: style.badgeBackground,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: style.accent, width: 0.8),
       ),
-      child: FittedBox(
-        alignment: Alignment.centerLeft,
-        fit: BoxFit.scaleDown,
-        child: Text(
-          '${style.name} · ${item.trainNumber}',
-          maxLines: 1,
-          softWrap: false,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.2,
-            color: style.badgeText,
-          ),
+      child: Text(
+        style.name,
+        maxLines: 1,
+        softWrap: false,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.15,
+          color: style.badgeText,
         ),
       ),
     );

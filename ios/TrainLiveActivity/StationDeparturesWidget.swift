@@ -156,7 +156,21 @@ private struct StationDeparturesWidgetView: View {
             }
         }
         .padding(12)
-        .containerBackground(.background, for: .widget)
+        .containerBackground(.fill.tertiary, for: .widget)
+        .background {
+            if #available(iOS 26.0, *) {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.clear)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20))
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.thinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(.white.opacity(0.65), lineWidth: 1)
+                    }
+            }
+        }
     }
 
     @ViewBuilder

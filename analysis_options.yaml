@@ -13,6 +13,7 @@ analyzer:
   exclude:
     - build/**
     - ios/**
+    - android/**
   errors:
     deprecated_member_use: ignore
 

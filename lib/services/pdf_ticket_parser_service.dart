@@ -1,4 +1,6 @@
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../core/constants/adif_stations.dart';
 import '../core/constants/app_strings.dart';
@@ -13,7 +15,17 @@ abstract final class PdfTicketParserService {
   );
 
   static Future<TicketModel> parse(Uint8List bytes) async {
-    final text = await _channel.invokeMethod<String>('extractPdfText', bytes);
+    String? text;
+    if (Platform.isAndroid) {
+      final document = PdfDocument(inputBytes: bytes);
+      try {
+        text = PdfTextExtractor(document).extractText();
+      } finally {
+        document.dispose();
+      }
+    } else {
+      text = await _channel.invokeMethod<String>('extractPdfText', bytes);
+    }
     if (text == null || text.trim().isEmpty) {
       throw const FormatException(AppStrings.pdfTextUnavailable);
     }
@@ -25,7 +37,47 @@ abstract final class PdfTicketParserService {
         .where((line) => line.isNotEmpty)
         .toList();
     final joinedText = normalizedLines.join('\n');
-    final origin = _findStation(normalizedLines, const [
+    final locatorMatch = RegExp(
+      r'Localizador:\s*([A-Z0-9]{6,8})',
+      caseSensitive: false,
+    ).firstMatch(joinedText);
+    final localizer = locatorMatch?.group(1)?.toUpperCase() ??
+        (_findLabeledValue(
+              normalizedLines,
+              const ['localizador', 'locator', 'pnr'],
+              RegExp(r'\b[A-Z0-9]{5,8}\b', caseSensitive: false),
+            ) ??
+            '');
+    var cleanedText = joinedText;
+    if (localizer.isNotEmpty) {
+      cleanedText = cleanedText.replaceAll(
+        RegExp(
+          r'\d{4}-\d{2}-\d{2}\s+' +
+              RegExp.escape(localizer) +
+              r'[^\n]*(?:Turista|Elige|Confort).*',
+          caseSensitive: false,
+        ),
+        '',
+      );
+    }
+    final cleanedLines = cleanedText
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    final originMatch = RegExp(
+      r'Origen:\s*([A-ZÁÉÍÓÚÑ0-9\s\-\.]+)',
+      caseSensitive: false,
+    ).firstMatch(cleanedText);
+    final destinationMatch = RegExp(
+      r'Destino:\s*([A-ZÁÉÍÓÚÑ0-9\s\-\.]+)',
+      caseSensitive: false,
+    ).firstMatch(cleanedText);
+    final originText = _cleanStationField(originMatch?.group(1));
+    final destinationText = _cleanStationField(destinationMatch?.group(1));
+    final origin = (originText == null ? null : _stationInText(originText)) ??
+        _findStation(cleanedLines, const [
           'origen',
           'origin',
           'salida',
@@ -33,16 +85,18 @@ abstract final class PdfTicketParserService {
           'estación de salida',
           'estacion de salida',
         ]) ??
-        _findStationInDocument(normalizedLines, first: true);
-    final destination = _findStation(normalizedLines, const [
-          'destino',
-          'destination',
-          'llegada',
-          'to',
-          'estación de llegada',
-          'estacion de llegada',
-        ]) ??
-        _findStationInDocument(normalizedLines, first: false);
+        _findStationInDocument(cleanedLines, first: true);
+    final destination =
+        (destinationText == null ? null : _stationInText(destinationText)) ??
+            _findStation(cleanedLines, const [
+              'destino',
+              'destination',
+              'llegada',
+              'to',
+              'estación de llegada',
+              'estacion de llegada',
+            ]) ??
+            _findStationInDocument(cleanedLines, first: false);
     if (origin == null ||
         destination == null ||
         origin.adifCode == destination.adifCode) {
@@ -80,60 +134,84 @@ abstract final class PdfTicketParserService {
     }
 
     final operator = OperatorThemes.detect(joinedText);
-    final normalizedService = OperatorThemes.normalizeRenfeService(joinedText);
+    final trainMatch = RegExp(
+      r'\b(AVE|AVLO|AVANT|INTERCITY|ALVIA|EUROMED|TALGO|MD|MEDIA DISTANCIA|REGIONAL|CERCANIAS|CERCANÍAS|IRYO|OUIGO)\s+(\d{4,5})\b',
+      caseSensitive: false,
+    ).firstMatch(cleanedText);
+    final normalizedService = trainMatch == null
+        ? OperatorThemes.normalizeRenfeService(cleanedText)
+        : _normalizePdfService(trainMatch.group(1)!);
     final service = operator == RailOperator.iryo
         ? 'IRYO'
         : operator == RailOperator.ouigo
             ? 'OUIGO'
             : normalizedService;
-    final ticketNumber = _findLabeledValue(
+    final ticketNumber = RegExp(
+          r'N[º°o]?\s*Billete:\s*(\d{10,16})',
+          caseSensitive: false,
+        ).firstMatch(cleanedText)?.group(1) ??
+        _findLabeledValue(
           normalizedLines,
           const ['número de billete', 'numero de billete', 'billete'],
           RegExp(r'\b\d{13}\b'),
         ) ??
         RegExp(r'\b\d{13}\b').firstMatch(joinedText)?.group(0);
-    final localizer = _findLabeledValue(
-          normalizedLines,
-          const ['localizador', 'locator', 'pnr'],
-          RegExp(r'\b[A-Z0-9]{5,8}\b', caseSensitive: false),
-        ) ??
-        '';
-    final trainNumber = _findLabeledValue(
+    final trainNumber = trainMatch?.group(2) ??
+        _findLabeledValue(
           normalizedLines,
           const ['número de tren', 'numero de tren', 'tren', 'train'],
           RegExp(r'\b[A-Z0-9-]{3,8}\b', caseSensitive: false),
         ) ??
         '';
-    final coach = _findLabeledValue(
+    final coach = RegExp(
+          r'Coche:\s*([A-Z0-9]+)',
+          caseSensitive: false,
+        ).firstMatch(cleanedText)?.group(1) ??
+        _findLabeledValue(
           normalizedLines,
           const ['coche', 'coach'],
           RegExp(r'\b[A-Z0-9-]{1,5}\b', caseSensitive: false),
         ) ??
         '';
-    final seat = _findLabeledValue(
+    final seat = RegExp(
+          r'Plaza:\s*([A-Z0-9]+)',
+          caseSensitive: false,
+        ).firstMatch(cleanedText)?.group(1) ??
+        _findLabeledValue(
           normalizedLines,
           const ['asiento', 'asento', 'plaza', 'seat'],
           RegExp(r'\b[A-Z0-9-]{1,8}\b', caseSensitive: false),
         ) ??
         '';
-    final seatClass = _findLabeledValue(
+    final explicitClass = RegExp(
+      r'(Elige Confort|Prémium|Premium|Turista|Elige)',
+      caseSensitive: false,
+    ).firstMatch(cleanedText)?.group(1);
+    final seatClass = explicitClass ??
+        _findLabeledValue(
           normalizedLines,
           const ['tarifa', 'clase', 'class', 'fare'],
           RegExp(r'[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ ]{1,24}', caseSensitive: false),
         ) ??
         '';
-    final platform = _findLabeledValue(
-      normalizedLines,
-      const ['vía', 'via', 'anden', 'platform'],
-      RegExp(r'\b\d{1,2}[A-Z]?\b', caseSensitive: false),
-    );
-    final passenger = _findLabeledValue(
+    const platform = null;
+    final passengerMatch = RegExp(
+      r'Pasajero:\s*([A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ \-]{2,48})',
+      caseSensitive: false,
+    ).firstMatch(cleanedText);
+    var passenger = passengerMatch?.group(1)?.trim() ??
+        _findLabeledValue(
           normalizedLines,
           const ['pasajero', 'viajero', 'passenger'],
           RegExp(r'[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ ,.' '-]{2,48}',
               caseSensitive: false),
         ) ??
         '';
+    if (passenger.length > 48 ||
+        passenger.toUpperCase().contains('TURISTA') ||
+        passenger.toUpperCase().contains('LOCALIZADOR')) {
+      passenger = '';
+    }
     final serial = ticketNumber ?? localizer;
 
     return TicketModel(
@@ -201,6 +279,9 @@ abstract final class PdfTicketParserService {
   }
 
   static StationInfo? _stationInText(String text) {
+    final resolved = AdifStations.resolveName(text.trim());
+    final resolvedStation = AdifStations.byName(resolved);
+    if (resolvedStation != null) return resolvedStation;
     final normalizedText = AdifStations.normalize(text);
     final matches = AdifStations.all
         .where((station) => normalizedText.contains(
@@ -249,6 +330,42 @@ abstract final class PdfTicketParserService {
       }
     }
     return null;
+  }
+
+  static String _normalizePdfService(String raw) {
+    final normalized =
+        raw.toUpperCase().replaceAll('CERCANÍAS', 'CERCANIAS').trim();
+    if (normalized == 'MD' ||
+        normalized == 'MEDIA DISTANCIA' ||
+        normalized == 'REGIONAL' ||
+        normalized == 'CERCANIAS') {
+      return normalized == 'CERCANIAS' ? 'RENFE CERCANÍAS' : 'RENFE REGIONAL';
+    }
+    if (normalized == 'ALVIA' ||
+        normalized == 'EUROMED' ||
+        normalized == 'TALGO' ||
+        normalized == 'INTERCITY') {
+      return 'RENFE INTERCITY';
+    }
+    if (normalized == 'AVLO') return 'RENFE AVLO';
+    if (normalized == 'AVANT') return 'RENFE AVANT';
+    if (normalized == 'AVE') return 'RENFE AVE';
+    if (normalized == 'IRYO') return 'IRYO';
+    if (normalized == 'OUIGO') return 'OUIGO';
+    return 'RENFE';
+  }
+
+  static String? _cleanStationField(String? value) {
+    if (value == null) return null;
+    var cleaned = value
+        .replaceAll(RegExp(r'\b(?:20\d{2})[.-]\d{2}[.-]\d{2}\b'), '')
+        .replaceAll(RegExp(r'\b\d{2}/\d{2}/\d{4}\b'), '')
+        .replaceAll(
+            RegExp(r'\b(?:Coche|Plaza|Destino)\b.*$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    cleaned = cleaned.replaceAll(RegExp(r'[,:;\-]+$'), '').trim();
+    return cleaned.isEmpty ? null : cleaned;
   }
 
   static DateTime? _parseDate(String text) {

@@ -88,6 +88,8 @@ abstract final class AppStrings {
       'Non se puideron identificar as horas de saída e chegada no PDF.';
   static const String pdfTextUnavailable =
       'Non se puido extraer texto do PDF. Comproba que o documento se le con claridade.';
+  static const String walletLinkInvalid =
+      'A ligazón de Google Wallet non contén un billete válido.';
   static const String pkpassInvalidArchive =
       'O ficheiro seleccionado non é un arquivo .pkpass ou ZIP válido';
   static const String pkpassMissingPassJson =
@@ -163,11 +165,27 @@ abstract final class AppStrings {
   static const String stationUnknownName = 'Estación non recoñecida';
   static const String stationsNoResults = 'Non se atoparon estacións';
   static const String stationVia = 'Vía';
+  static const String stationNearestAction = 'Usar a estación máis próxima';
+  static const String stationNearestLoading = 'Buscando estación máis próxima…';
+  static const String stationSetAsDefault = 'Usar como predeterminada';
+  static const String stationIsDefault = 'Predeterminada';
+  static const String stationDefaultUpdated =
+      'Estación por defecto actualizada';
+  static const String stationLocationServiceDisabled =
+      'Activa a localización do dispositivo e téntao de novo.';
+  static const String stationLocationPermissionDenied =
+      'Permite o acceso á localización para buscar a estación máis próxima.';
+  static const String stationLocationPermissionDeniedForever =
+      'Activa o permiso de localización nos Axustes do dispositivo.';
+  static const String stationNearestUnavailable =
+      'Non se puido determinar a estación máis próxima.';
+  static const String stationCoordinatesCredit =
+      'Coordenadas: © OpenStreetMap contributors (ODbL).';
   static const String stationDestination = 'Destino';
   static const String stationTime = 'Hora';
   static const String stationTrain = 'Tren';
   static const String stationStops = 'Paradas';
-  static const String stationLiveClock = 'Hora oficial ADIF';
+  static const String stationLiveClock = 'Hora local';
   static const String stationNoTrains =
       'Sen circulacións dispoñibles neste momento';
   static const String stationErrorRetry = 'Tentar de novo';
@@ -181,6 +199,8 @@ abstract final class AppStrings {
   static const String settingsLiveActivitiesDesc =
       'Amosa o progreso e a vía na pantalla de bloqueo e na Illa Dinámica';
   static const String settingsDefaultStation = 'Estación por defecto';
+  static const String settingsNearestStationDescription =
+      'Usa a localización actual para escoller unha estación do catálogo.';
   static const String settingsSave = 'Gardar axustes';
   static const String settingsSavedSuccess = 'Axustes gardados correctamente';
   static const String settingsConnectionTest = 'Probar conexión';

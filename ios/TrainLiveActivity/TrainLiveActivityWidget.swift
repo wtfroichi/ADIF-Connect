@@ -140,6 +140,16 @@ struct TrainLiveActivityWidget: Widget {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        .background {
+            if #available(iOS 26.0, *) {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.clear)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20))
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.thinMaterial)
+            }
+        }
     }
 
     private func routeProgress(_ progress: Double) -> some View {

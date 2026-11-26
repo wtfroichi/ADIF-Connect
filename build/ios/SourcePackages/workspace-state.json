@@ -100,6 +100,20 @@
       {
         "basedOn" : null,
         "packageRef" : {
+          "identity" : "geolocator_apple-2.4.3",
+          "kind" : "fileSystem",
+          "location" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/geolocator_apple-2.4.3",
+          "name" : "geolocator_apple"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/geolocator_apple-2.4.3"
+        },
+        "subpath" : "geolocator_apple-2.4.3"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
           "identity" : "live_activities-2.3.0",
           "kind" : "fileSystem",
           "location" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/live_activities-2.3.0",
@@ -110,6 +124,20 @@
           "path" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/live_activities-2.3.0"
         },
         "subpath" : "live_activities-2.3.0"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "package_info_plus-9.0.1",
+          "kind" : "fileSystem",
+          "location" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/package_info_plus-9.0.1",
+          "name" : "package_info_plus"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/rprieto/VSCode/Github/ADIF-Connect/ios/Flutter/ephemeral/Packages/.packages/package_info_plus-9.0.1"
+        },
+        "subpath" : "package_info_plus-9.0.1"
       },
       {
         "basedOn" : null,

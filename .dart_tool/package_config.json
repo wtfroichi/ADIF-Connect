@@ -62,6 +62,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "convert",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/convert-3.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "cross_file",
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/cross_file-0.3.5+5",
       "packageUri": "lib/",
@@ -78,6 +84,12 @@
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.9",
       "packageUri": "lib/",
       "languageVersion": "3.9"
+    },
+    {
+      "name": "dbus",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/dbus-0.7.15",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
     },
     {
       "name": "fake_async",
@@ -104,6 +116,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "fixnum",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/fixnum-1.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///opt/homebrew/share/flutter/packages/flutter",
       "packageUri": "lib/",
@@ -123,7 +141,7 @@
     },
     {
       "name": "flutter_lucide",
-      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/flutter_lucide-1.77.0",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/flutter_lucide-1.78.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -146,16 +164,88 @@
       "languageVersion": "3.13"
     },
     {
+      "name": "geoclue",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geoclue-0.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.16"
+    },
+    {
+      "name": "geolocator",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator-14.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_android",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_android-5.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_apple",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_apple-2.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_linux",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_linux-0.2.4",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_platform_interface",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_platform_interface-4.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_web",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_web-4.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_windows",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/geolocator_windows-0.2.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "gsettings",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/gsettings-0.2.8",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "hooks",
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/hooks-2.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
     {
+      "name": "http",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/http-1.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "http_parser",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/http_parser-4.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "image",
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/image-4.3.0",
       "packageUri": "lib/",
       "languageVersion": "2.15"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/intl-0.20.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
     },
     {
       "name": "jni",
@@ -246,6 +336,18 @@
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/package_config-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.11"
+    },
+    {
+      "name": "package_info_plus",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/package_info_plus-9.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "package_info_plus_platform_interface",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/package_info_plus_platform_interface-3.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
     },
     {
       "name": "path",
@@ -398,6 +500,18 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "syncfusion_flutter_core",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/syncfusion_flutter_core-33.2.15",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
+      "name": "syncfusion_flutter_pdf",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/syncfusion_flutter_pdf-33.2.13",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
       "name": "term_glyph",
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/term_glyph-1.2.2",
       "packageUri": "lib/",
@@ -408,6 +522,18 @@
       "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/test_api-0.7.14",
       "packageUri": "lib/",
       "languageVersion": "3.11"
+    },
+    {
+      "name": "typed_data",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/typed_data-1.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "uuid",
+      "rootUri": "file:///Users/rprieto/.pub-cache/hosted/pub.dev/uuid-4.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "vector_math",

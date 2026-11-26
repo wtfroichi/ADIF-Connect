@@ -33,6 +33,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>adif_connect</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos a túa localización só cando escolles buscar a estación de tren máis próxima.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

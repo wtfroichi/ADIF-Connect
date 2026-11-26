@@ -1,4 +1,5 @@
 import 'package:live_activities/live_activities.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import '../core/constants/adif_stations.dart';
 import '../core/constants/app_strings.dart';
@@ -17,6 +18,9 @@ class LiveActivityService {
 
   static const String _appGroupId = 'group.es.adifconnect.app';
   final LiveActivities _liveActivities = LiveActivities();
+  static const MethodChannel _androidChannel =
+      MethodChannel('es.adifconnect.app/live_activity');
+  static const int _androidNotificationId = 4201;
   bool _isInitialized = false;
   Future<void>? _initialization;
   String? _activeActivityId;
@@ -80,6 +84,10 @@ class LiveActivityService {
   }
 
   Future<void> _initialize() async {
+    if (Platform.isAndroid) {
+      _isInitialized = true;
+      return;
+    }
     try {
       await _liveActivities.init(appGroupId: _appGroupId);
       _isInitialized = true;
@@ -92,6 +100,46 @@ class LiveActivityService {
 
   Future<String?> startOrUpdateActivity(TicketModel ticket) async {
     await init();
+
+    if (Platform.isAndroid) {
+      try {
+        final enabled = await _androidChannel
+                .invokeMethod<bool>('areNotificationsEnabled') ??
+            false;
+        if (!enabled) {
+          await _androidChannel
+              .invokeMethod<bool>('requestNotificationPermission');
+        }
+
+        final departure = ticket.departureTime;
+        final arrival = ticket.arrivalTime;
+        final result =
+            await _androidChannel.invokeMethod<int>('startOrUpdate', {
+          'notificationId': _androidNotificationId,
+          'origin': _stationCodeForActivity(ticket.originCode),
+          'destination': _stationCodeForActivity(ticket.destinationCode),
+          'departureTime':
+              '${departure.hour.toString().padLeft(2, '0')}:${departure.minute.toString().padLeft(2, '0')}',
+          'arrivalTime':
+              '${arrival.hour.toString().padLeft(2, '0')}:${arrival.minute.toString().padLeft(2, '0')}',
+          'platform': _nonEmpty(ticket.platform ?? ''),
+          'coach': _nonEmpty(ticket.coach),
+          'seat': _nonEmpty(ticket.seat),
+          'operatorName': _nonEmpty(
+            OperatorThemes.forTrain(ticket.operator, ticket.trainType).name,
+          ),
+          'trainNumber': _cleanIdentifier(ticket.trainNumber),
+          'progress': 0,
+        });
+        final id = result?.toString() ?? _androidNotificationId.toString();
+        _activeActivityId = id;
+        return id;
+      } on PlatformException catch (error) {
+        throw LiveActivityException(
+          '${AppStrings.liveActivitySetupError} (${_nativeErrorDetail(error)})',
+        );
+      }
+    }
 
     final bool enabled;
     try {
@@ -152,6 +200,20 @@ class LiveActivityService {
   Future<void> endActivity([String? activityId]) async {
     final id = activityId ?? _activeActivityId;
     if (id == null) return;
+    if (Platform.isAndroid) {
+      try {
+        await _androidChannel.invokeMethod<void>(
+          'end',
+          int.tryParse(id) ?? _androidNotificationId,
+        );
+        _activeActivityId = null;
+      } on PlatformException catch (error) {
+        throw LiveActivityException(
+          '${AppStrings.liveActivityEndError} (${_nativeErrorDetail(error)})',
+        );
+      }
+      return;
+    }
     try {
       final normalizedId = _normalizeActivityId(id);
       await _liveActivities.endActivity(normalizedId);

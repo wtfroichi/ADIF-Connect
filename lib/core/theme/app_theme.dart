@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Base design tokens for iOS Liquid Glass / Crystal aesthetics with adaptive
-/// Light & Dark mode support and exact official Renfe & ADIF palettes.
+/// Shared adaptive colors and typography for the app's content surfaces.
 abstract final class AppTheme {
   // Exact Renfe Corporate Colors
   static const Color renfePrimary = Color(0xFF680A51);
@@ -118,25 +117,25 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: lightInputBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: lightInputBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: adifTeal, width: 1.5),
         ),
       ),
       fontFamily: '.SF Pro Text',
       appBarTheme: const AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        backgroundColor: Colors.transparent,
+        backgroundColor: lightBackground,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
+        toolbarHeight: 44,
         titleTextStyle: TextStyle(
           color: lightTextPrimary,
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -157,25 +156,25 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: darkInputBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkInputBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: adifMint, width: 1.5),
         ),
       ),
       fontFamily: '.SF Pro Text',
       appBarTheme: const AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        backgroundColor: Colors.transparent,
+        backgroundColor: darkBackground,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
+        toolbarHeight: 44,
         titleTextStyle: TextStyle(
           color: darkTextPrimary,
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

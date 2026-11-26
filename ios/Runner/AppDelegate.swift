@@ -209,7 +209,10 @@ private enum PDFTicketTextExtractor {
 
     let pageTexts = (0..<document.pageCount).compactMap { document.page(at: $0)?.string }
     let extractedText = pageTexts.joined(separator: "\n")
-    if extractedText.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 {
+    let alphanumericCount = extractedText.unicodeScalars.reduce(into: 0) {
+      if CharacterSet.alphanumerics.contains($1) { $0 += 1 }
+    }
+    if alphanumericCount >= 40 {
       return extractedText
     }
 
@@ -223,7 +226,7 @@ private enum PDFTicketTextExtractor {
       guard let cgImage = image.cgImage else { continue }
       let request = VNRecognizeTextRequest()
       request.recognitionLevel = .accurate
-      request.recognitionLanguages = ["es-ES", "en-US"]
+      request.recognitionLanguages = ["es-ES", "gl-ES", "en-US"]
       request.usesLanguageCorrection = true
       try VNImageRequestHandler(cgImage: cgImage).perform([request])
       recognizedPages.append(

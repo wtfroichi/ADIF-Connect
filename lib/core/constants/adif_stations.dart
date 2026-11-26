@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'app_strings.dart';
+import 'station_coordinates.dart';
 
 class StationInfo {
   final String code;
@@ -313,6 +316,25 @@ abstract final class AdifStations {
     'ZA': '30100',
   };
 
+  static const Map<String, String> _pdfAliases = {
+    'SANTIAGO C': '31400',
+    'SANTIAGO DE C': '31400',
+    'A CORUNA': '31412',
+    'LA CORUNA': '31412',
+    'VIGO GUIXAR': '22300',
+    'VIGO URZAIZ': '22308',
+    'PONTEVEDRA': '22200',
+    'VILAGARCIA': '22204',
+    'OURENSE': '22100',
+    'MADRID CHAM': '17000',
+    'MADRID-CHAMARTIN': '17000',
+    'MADRID CHAMARTIN': '17000',
+    'MADRID ATOCH': '18000',
+    'MADRID-ATOCHA': '18000',
+    'MADRID ATOCHA': '18000',
+    'BARCELONA SA': '71801',
+  };
+
   static StationInfo? byCode(String code) {
     final normalizedCode = code.trim().toUpperCase();
     for (final station in all) {
@@ -331,6 +353,12 @@ abstract final class AdifStations {
   static String resolveName(String codeOrName) {
     final value = codeOrName.trim();
     if (value.isEmpty) return value;
+    final normalizedPdf =
+        value.toUpperCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+    final pdfCode = _pdfAliases[normalizedPdf];
+    if (pdfCode != null) {
+      return byCode(pdfCode)?.name ?? value;
+    }
     return byCode(value)?.name ??
         byName(value)?.name ??
         (RegExp(r'^\d+$').hasMatch(value)
@@ -355,6 +383,36 @@ abstract final class AdifStations {
     }).toList();
   }
 
+  static StationInfo? nearestTo(double latitude, double longitude) {
+    if (!latitude.isFinite ||
+        !longitude.isFinite ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180) {
+      return null;
+    }
+
+    StationInfo? nearest;
+    var nearestDistance = double.infinity;
+    for (final station in all) {
+      final coordinates = stationCoordinatesByCode[station.adifCode];
+      if (coordinates == null) continue;
+
+      final distance = _distanceInMeters(
+        latitude,
+        longitude,
+        coordinates.latitude,
+        coordinates.longitude,
+      );
+      if (distance < nearestDistance) {
+        nearest = station;
+        nearestDistance = distance;
+      }
+    }
+    return nearest;
+  }
+
   static StationInfo? byName(String name) {
     final normalized = _normalize(name);
     for (final station in all) {
@@ -368,12 +426,35 @@ abstract final class AdifStations {
       return byCode('22100');
     }
     if (normalized.contains('vigourzaiz')) return byCode('22308');
+    if (normalized.contains('vigoguixar')) return byCode('22300');
+    if (normalized.contains('vilagarcia')) return byCode('22204');
+    if (normalized.contains('pontevedra')) return byCode('22200');
     if (normalized.contains('madridchamart')) return byCode('17000');
     if (normalized.contains('atocha')) return byCode('18000');
     return null;
   }
 
   static String normalize(String value) => _normalize(value);
+
+  static double _distanceInMeters(
+    double latitude1,
+    double longitude1,
+    double latitude2,
+    double longitude2,
+  ) {
+    const earthRadiusMeters = 6371000.0;
+    final latitudeDelta = _toRadians(latitude2 - latitude1);
+    final longitudeDelta = _toRadians(longitude2 - longitude1);
+    final haversine = math.pow(math.sin(latitudeDelta / 2), 2) +
+        math.cos(_toRadians(latitude1)) *
+            math.cos(_toRadians(latitude2)) *
+            math.pow(math.sin(longitudeDelta / 2), 2);
+    return 2 *
+        earthRadiusMeters *
+        math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine));
+  }
+
+  static double _toRadians(double degrees) => degrees * math.pi / 180;
 
   static String _normalize(String value) => value
       .toLowerCase()

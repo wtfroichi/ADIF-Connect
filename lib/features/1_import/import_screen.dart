@@ -431,6 +431,12 @@ class _ImportScreenState extends State<ImportScreen> {
 
         final fileBytes =
             bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
+        if (extension == 'pdf') {
+          final tempFile = File(
+            '${Directory.systemTemp.path}/adif_connect_${DateTime.now().microsecondsSinceEpoch}.pdf',
+          );
+          await tempFile.writeAsBytes(fileBytes, flush: true);
+        }
         final ticket = extension == 'pdf'
             ? await PdfTicketParserService.parse(fileBytes)
             : PkpassParserService.parse(fileBytes);

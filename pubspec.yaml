@@ -18,6 +18,8 @@ dependencies:
   live_activities: ^2.3.0
   barcode_widget: ^2.0.4
   barcode: ^2.2.9
+  syncfusion_flutter_pdf: ^33.2.13
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:
