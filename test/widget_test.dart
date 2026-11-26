@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adif_connect/core/theme/app_theme.dart';
+import 'package:anden_libre/core/theme/app_theme.dart';
 
 void main() {
   test('ADIF themes use adaptive brightness', () {

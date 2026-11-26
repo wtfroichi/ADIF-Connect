@@ -43,6 +43,8 @@ class StationBoardItem {
   final String origin; // for arrivals
   final List<String> stops;
   final String? platform; // "2", "4" or null
+  final String? predictedPlatform;
+  final double? predictionConfidence;
   final StationTrainStatus status;
   final int? delayMinutes;
 
@@ -57,11 +59,14 @@ class StationBoardItem {
     required String origin,
     required this.stops,
     String? platform,
+    String? predictedPlatform,
+    this.predictionConfidence,
     required this.status,
     this.delayMinutes,
-  }) : origin = AdifStations.resolveName(origin),
-       destination = AdifStations.resolveName(destination),
-       platform = normalizePlatform(platform);
+  })  : origin = AdifStations.resolveName(origin),
+        destination = AdifStations.resolveName(destination),
+        platform = normalizePlatform(platform),
+        predictedPlatform = normalizePlatform(predictedPlatform);
 
   static String? normalizePlatform(String? value) {
     final trimmed = value?.trim();
@@ -91,29 +96,33 @@ class StationBoardItem {
       trainNumber: json['trainNumber'] as String,
       destination: json['destination'] as String,
       origin: json['origin'] as String? ?? '',
-      stops:
-          (json['stops'] as List<dynamic>?)
+      stops: (json['stops'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
       platform: json['platform'] as String?,
+      predictedPlatform: json['predictedPlatform'] as String?,
+      predictionConfidence: (json['predictionConfidence'] as num?)?.toDouble(),
       status: StationTrainStatus.values.byName(json['status'] as String),
       delayMinutes: json['delayMinutes'] as int?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'scheduledTime': scheduledTime,
-    if (estimatedTime != null) 'estimatedTime': estimatedTime,
-    'operator': operator.name,
-    'trainType': trainType,
-    'trainNumber': trainNumber,
-    'destination': destination,
-    'origin': origin,
-    'stops': stops,
-    if (platform != null) 'platform': platform,
-    'status': status.name,
-    if (delayMinutes != null) 'delayMinutes': delayMinutes,
-  };
+        'id': id,
+        'scheduledTime': scheduledTime,
+        if (estimatedTime != null) 'estimatedTime': estimatedTime,
+        'operator': operator.name,
+        'trainType': trainType,
+        'trainNumber': trainNumber,
+        'destination': destination,
+        'origin': origin,
+        'stops': stops,
+        if (platform != null) 'platform': platform,
+        if (predictedPlatform != null) 'predictedPlatform': predictedPlatform,
+        if (predictionConfidence != null)
+          'predictionConfidence': predictionConfidence,
+        'status': status.name,
+        if (delayMinutes != null) 'delayMinutes': delayMinutes,
+      };
 }

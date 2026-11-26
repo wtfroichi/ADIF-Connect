@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adif_connect/core/constants/adif_stations.dart';
-import 'package:adif_connect/core/constants/app_strings.dart';
-import 'package:adif_connect/core/constants/station_coordinates.dart';
+import 'package:anden_libre/core/constants/adif_stations.dart';
+import 'package:anden_libre/core/constants/app_strings.dart';
+import 'package:anden_libre/core/constants/station_coordinates.dart';
 
 void main() {
   test('resolves ADIF and UIC station codes to station names', () {

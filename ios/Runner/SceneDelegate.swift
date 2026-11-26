@@ -13,7 +13,7 @@ class SceneDelegate: FlutterSceneDelegate {
   }
 
   private func handleIncomingPassUrl(_ url: URL) {
-    if url.scheme == "adifconnect", url.host == "import-inbox" {
+    if url.scheme == "andenlibre", url.host == "import-inbox" {
       if let channel = SceneDelegate.channel {
         channel.invokeMethod("onImportInbox", arguments: nil)
       } else {

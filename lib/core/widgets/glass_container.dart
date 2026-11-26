@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'liquid_glass_container.dart';
 
-/// A quiet content surface. Liquid Glass is reserved for system navigation.
+/// Shared card surface with restrained Liquid Glass materials on iOS.
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -22,8 +24,8 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.padding = const EdgeInsets.all(16),
     this.margin,
-    this.borderRadius = 20,
-    this.blurSigma = 24.0,
+    this.borderRadius = 24,
+    this.blurSigma = 26.0,
     this.backgroundColor,
     this.borderColor,
     this.glowColor,
@@ -32,6 +34,22 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return LiquidGlassContainer(
+        width: width,
+        height: height,
+        padding: padding,
+        margin: margin,
+        borderRadius: borderRadius,
+        blurSigma: blurSigma,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        glowColor: glowColor,
+        onTap: onTap,
+        child: child,
+      );
+    }
+
     final theme = Theme.of(context);
     final edge = borderColor ??
         (glowColor == null

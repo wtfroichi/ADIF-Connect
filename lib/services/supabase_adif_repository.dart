@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/adif_stations.dart';
 import '../core/constants/app_strings.dart';
 import '../models/station_board_model.dart';
@@ -9,7 +8,6 @@ import 'station_widget_cache.dart';
 
 class SupabaseAdifRepository implements AdifLiveRepository {
   final SettingsService settingsService;
-  final HttpClient _httpClient = HttpClient();
 
   SupabaseAdifRepository({required this.settingsService});
 
@@ -28,25 +26,17 @@ class SupabaseAdifRepository implements AdifLiveRepository {
 
   Future<List<StationBoardItem>> _fetchFromSupabase(
       String stationCode, String type) async {
-    final base = SettingsService.supabaseUrl.replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.parse(
-        '$base/functions/v1/adif-board?station=$stationCode&type=$type');
-
-    final request = await _httpClient.getUrl(uri);
-    request.headers
-        .set('Authorization', 'Bearer ${SettingsService.supabaseAnonKey}');
-    request.headers.set('apikey', SettingsService.supabaseAnonKey);
-    request.headers.set('Accept', 'application/json');
-
-    final response = await request.close().timeout(const Duration(seconds: 8));
-    final body = await response.transform(utf8.decoder).join();
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('ADIF board returned HTTP ${response.statusCode}');
+    final response = await Supabase.instance.client.functions.invoke(
+      'adif-board',
+      method: HttpMethod.get,
+      queryParameters: {'station': stationCode, 'type': type},
+    ).timeout(const Duration(seconds: 8));
+    if (response.status != 200) {
+      throw const FormatException(AppStrings.stationBoardLoadError);
     }
-
-    final decoded = jsonDecode(body);
+    final decoded = response.data;
     if (decoded is! Map<String, dynamic> || decoded['items'] is! List) {
-      throw const FormatException('Invalid ADIF board response');
+      throw const FormatException(AppStrings.stationBoardLoadError);
     }
 
     final items = decoded['items'] as List<dynamic>;
@@ -54,7 +44,7 @@ class SupabaseAdifRepository implements AdifLiveRepository {
     if (items.isEmpty &&
         error is String &&
         error != AppStrings.stationNoTrains) {
-      throw HttpException(error);
+      throw FormatException(error);
     }
 
     final parsedItems = items

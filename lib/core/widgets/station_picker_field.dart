@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../constants/adif_stations.dart';
@@ -24,7 +24,7 @@ class StationPickerField extends StatelessWidget {
   });
 
   Future<void> _selectStation(BuildContext context) async {
-    final station = Platform.isIOS
+    final station = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
         ? await showCupertinoModalPopup<StationInfo>(
             context: context,
             builder: (context) => const _StationPickerSheet(),
@@ -42,7 +42,7 @@ class StationPickerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSurface;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-    if (Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: () => _selectStation(context),
@@ -163,7 +163,7 @@ class _StationPickerSheetState extends State<_StationPickerSheet> {
         )
         .toDouble();
 
-    final isIOS = Platform.isIOS;
+    final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
     return Padding(
       padding: EdgeInsets.only(bottom: keyboardInset),
       child: SizedBox(

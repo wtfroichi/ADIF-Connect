@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -268,7 +268,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
         : const Icon(CupertinoIcons.location_circle, size: 22);
     return Tooltip(
       message: AppStrings.stationNearestAction,
-      child: Platform.isIOS
+      child: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
           ? CupertinoButton(
               padding: const EdgeInsets.all(8),
               onPressed: _isLocatingNearest ? null : _useNearestStation,
@@ -286,7 +286,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
   Widget _buildDefaultStationButton() {
     final isDefault =
         widget.settingsService.defaultStationCode == _selectedStation.adifCode;
-    if (Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return CupertinoButton(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         onPressed: isDefault ? null : _setDefaultStation,
@@ -308,7 +308,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
   }
 
   Widget _buildBoardSwitcher(BuildContext context) {
-    if (Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return SizedBox(
         width: double.infinity,
         child: CupertinoSlidingSegmentedControl<BoardType>(
@@ -363,7 +363,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
   Widget _buildBoardContent(BuildContext context) {
     if (_isLoading) {
       return Center(
-        child: Platform.isIOS
+        child: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
             ? const CupertinoActivityIndicator()
             : const CircularProgressIndicator(),
       );
@@ -395,7 +395,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Platform.isIOS
+            !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
                 ? CupertinoButton(
                     onPressed: _fetchBoardData,
                     child: const Text(AppStrings.stationErrorRetry),
@@ -410,7 +410,7 @@ class _StationBoardScreenState extends State<StationBoardScreen> {
       ),
     );
 
-    if (Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),

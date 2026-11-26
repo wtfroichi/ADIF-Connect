@@ -1,5 +1,5 @@
-name: adif_connect
-description: "ADIF Connect - Multimodal rail companion for iOS"
+name: anden_libre
+description: "AndénLibre - Multimodal rail companion for iOS"
 publish_to: "none"
 version: 1.0.0+1
 
@@ -20,6 +20,11 @@ dependencies:
   barcode: ^2.2.9
   syncfusion_flutter_pdf: ^33.2.13
   geolocator: ^14.0.2
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  url_launcher: ^6.3.3
+  http: ^1.6.0
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:

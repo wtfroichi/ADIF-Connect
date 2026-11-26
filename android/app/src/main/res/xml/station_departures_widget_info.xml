@@ -6,4 +6,4 @@
     android:initialLayout="@layout/widget_station_departures"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:configure="es.adifconnect.adif_connect.StationWidgetConfigureActivity"/>
+    android:configure="es.andenlibre.app.StationWidgetConfigureActivity"/>

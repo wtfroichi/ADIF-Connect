@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adif_connect/core/theme/operator_themes.dart';
+import 'package:anden_libre/core/theme/operator_themes.dart';
 
 void main() {
   test('uses the commercial RENFE label and palette for each train brand', () {
@@ -8,18 +8,18 @@ void main() {
       'AVE': ('RENFE AVE', 0xFF0B132B, 0xFF1C3D6E),
       'AVANT': ('RENFE AVANT', 0xFF0B132B, 0xFF1C3D6E),
       'AVLO': ('RENFE AVLO', 0xFF0B132B, 0xFF00B4D8),
-      'INTERCITY': ('RENFE INTERCITY', 0xFF680A51, 0xFFC026D3),
-      'ALVIA': ('RENFE INTERCITY', 0xFF680A51, 0xFFC026D3),
-      'EUROMED': ('RENFE INTERCITY', 0xFF680A51, 0xFFC026D3),
-      'TALGO': ('RENFE INTERCITY', 0xFF680A51, 0xFFC026D3),
-      'REGIONAL': ('RENFE REGIONAL', 0xFF680A51, 0xFFC026D3),
-      'Regional Exprés': ('RENFE REGIONAL', 0xFF680A51, 0xFFC026D3),
-      'REG.EXP.': ('RENFE REGIONAL', 0xFF680A51, 0xFFC026D3),
-      'MD': ('RENFE REGIONAL', 0xFF680A51, 0xFFC026D3),
-      'Media Distancia': ('RENFE REGIONAL', 0xFF680A51, 0xFFC026D3),
-      'CERCANÍAS': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFEF3340),
-      'Rodalies': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFEF3340),
-      'FEVE': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFEF3340),
+      'INTERCITY': ('RENFE INTERCITY', 0xFF680A51, 0xFF8E136F),
+      'ALVIA': ('RENFE INTERCITY', 0xFF680A51, 0xFF8E136F),
+      'EUROMED': ('RENFE INTERCITY', 0xFF680A51, 0xFF8E136F),
+      'TALGO': ('RENFE INTERCITY', 0xFF680A51, 0xFF8E136F),
+      'REGIONAL': ('RENFE REGIONAL', 0xFF680A51, 0xFF8E136F),
+      'Regional Exprés': ('RENFE REGIONAL', 0xFF680A51, 0xFF8E136F),
+      'REG.EXP.': ('RENFE REGIONAL', 0xFF680A51, 0xFF8E136F),
+      'MD': ('RENFE REGIONAL', 0xFF680A51, 0xFF8E136F),
+      'Media Distancia': ('RENFE REGIONAL', 0xFF680A51, 0xFF8E136F),
+      'CERCANÍAS': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFC81D25),
+      'Rodalies': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFC81D25),
+      'FEVE': ('RENFE CERCANÍAS', 0xFFEF3340, 0xFFC81D25),
     };
 
     for (final entry in cases.entries) {
@@ -41,6 +41,18 @@ void main() {
     expect(lightStyle.accent.value, 0xFF1C3D6E);
     expect(darkStyle.accent.value, 0xFF60A5FA);
     expect(darkStyle.badgeText.value, 0xFF60A5FA);
+  });
+
+  test('uses high-contrast purple highlights in dark mode', () {
+    final darkStyle = OperatorThemes.forTrain(
+      RailOperator.renfe,
+      'INTERCITY',
+      isDark: true,
+    );
+
+    expect(darkStyle.secondary.value, 0xFFC026D3);
+    expect(darkStyle.accent.value, 0xFFE879F9);
+    expect(darkStyle.badgeText.value, 0xFFE879F9);
   });
 
   test('keeps private operator labels and palettes', () {

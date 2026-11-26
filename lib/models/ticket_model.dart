@@ -71,6 +71,9 @@ class TicketModel {
   final String seat;
   final String seatClass;
   final String? platform;
+  final String? arrivalPlatform;
+  final String? predictedPlatform;
+  final double? predictionConfidence;
   final String passengerName;
   final String? ticketNumber;
   final String bookingReference; // Localizador
@@ -91,6 +94,9 @@ class TicketModel {
     required this.seat,
     required this.seatClass,
     this.platform,
+    this.arrivalPlatform,
+    this.predictedPlatform,
+    this.predictionConfidence,
     required this.passengerName,
     this.ticketNumber,
     required this.bookingReference,
@@ -115,6 +121,9 @@ class TicketModel {
       seat: json['seat'] as String,
       seatClass: json['seatClass'] as String,
       platform: json['platform'] as String?,
+      arrivalPlatform: json['arrivalPlatform'] as String?,
+      predictedPlatform: json['predictedPlatform'] as String?,
+      predictionConfidence: (json['predictionConfidence'] as num?)?.toDouble(),
       passengerName: json['passengerName'] as String,
       ticketNumber: json['ticketNumber'] as String?,
       bookingReference: json['bookingReference'] as String,
@@ -139,6 +148,10 @@ class TicketModel {
         'seat': seat,
         'seatClass': seatClass,
         if (platform != null) 'platform': platform,
+        if (arrivalPlatform != null) 'arrivalPlatform': arrivalPlatform,
+        if (predictedPlatform != null) 'predictedPlatform': predictedPlatform,
+        if (predictionConfidence != null)
+          'predictionConfidence': predictionConfidence,
         'passengerName': passengerName,
         if (ticketNumber != null) 'ticketNumber': ticketNumber,
         'bookingReference': bookingReference,

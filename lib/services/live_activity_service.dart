@@ -1,5 +1,5 @@
 import 'package:live_activities/live_activities.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../core/constants/adif_stations.dart';
 import '../core/constants/app_strings.dart';
@@ -16,12 +16,15 @@ class LiveActivityService {
   static final LiveActivityService instance = LiveActivityService._();
   LiveActivityService._();
 
-  static const String _appGroupId = 'group.es.adifconnect.app';
+  static const String _appGroupId = 'group.es.andenlibre.app';
   final LiveActivities _liveActivities = LiveActivities();
   static const MethodChannel _androidChannel =
-      MethodChannel('es.adifconnect.app/live_activity');
+      MethodChannel('es.andenlibre.app/live_activity');
+  static const MethodChannel _iosNativeChannel =
+      MethodChannel('es.andenlibre.app/live_activity');
   static const int _androidNotificationId = 4201;
   bool _isInitialized = false;
+  bool _useNativeFallbackOnly = false;
   Future<void>? _initialization;
   String? _activeActivityId;
 
@@ -56,6 +59,9 @@ class LiveActivityService {
         : identifier;
   }
 
+  String _colorToken(Color color) =>
+      color.toARGB32().toRadixString(16).padLeft(8, '0');
+
   String _normalizeActivityId(String value) {
     final hex = value.replaceAll(RegExp(r'[^A-Fa-f0-9]'), '').toLowerCase();
     if (hex.length != 32) {
@@ -84,7 +90,7 @@ class LiveActivityService {
   }
 
   Future<void> _initialize() async {
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       _isInitialized = true;
       return;
     }
@@ -92,16 +98,15 @@ class LiveActivityService {
       await _liveActivities.init(appGroupId: _appGroupId);
       _isInitialized = true;
     } catch (error) {
-      throw LiveActivityException(
-        '${AppStrings.liveActivitySetupError} (${_nativeErrorDetail(error)})',
-      );
+      _useNativeFallbackOnly = true;
+      _isInitialized = true;
     }
   }
 
   Future<String?> startOrUpdateActivity(TicketModel ticket) async {
     await init();
 
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       try {
         final enabled = await _androidChannel
                 .invokeMethod<bool>('areNotificationsEnabled') ??
@@ -113,6 +118,8 @@ class LiveActivityService {
 
         final departure = ticket.departureTime;
         final arrival = ticket.arrivalTime;
+        final style =
+            OperatorThemes.forTrain(ticket.operator, ticket.trainType);
         final result =
             await _androidChannel.invokeMethod<int>('startOrUpdate', {
           'notificationId': _androidNotificationId,
@@ -125,9 +132,8 @@ class LiveActivityService {
           'platform': _nonEmpty(ticket.platform ?? ''),
           'coach': _nonEmpty(ticket.coach),
           'seat': _nonEmpty(ticket.seat),
-          'operatorName': _nonEmpty(
-            OperatorThemes.forTrain(ticket.operator, ticket.trainType).name,
-          ),
+          'operatorName': _nonEmpty(style.name),
+          'operatorPrimary': style.primary.toARGB32(),
           'trainNumber': _cleanIdentifier(ticket.trainNumber),
           'progress': 0,
         });
@@ -141,26 +147,20 @@ class LiveActivityService {
       }
     }
 
-    final bool enabled;
-    try {
-      enabled = await _liveActivities.areActivitiesEnabled();
-    } catch (error) {
-      throw LiveActivityException(
-        '${AppStrings.liveActivitySetupError} (${_nativeErrorDetail(error)})',
-      );
-    }
-    if (!enabled) {
-      throw const LiveActivityException(
-          AppStrings.liveActivityPermissionDisabled);
-    }
-
     final departure = ticket.departureTime;
     final arrival = ticket.arrivalTime;
+    final style = OperatorThemes.forTrain(
+      ticket.operator,
+      ticket.trainType,
+      isDark: true,
+    );
     final activityData = <String, dynamic>{
       'trainNumber': _cleanIdentifier(ticket.trainNumber),
       'operatorName': _nonEmpty(
-        OperatorThemes.forTrain(ticket.operator, ticket.trainType).name,
+        style.name,
       ),
+      'operatorPrimary': _colorToken(style.primary),
+      'operatorAccent': _colorToken(style.accent),
       'originCode': _stationCodeForActivity(ticket.originCode),
       'destinationCode': _stationCodeForActivity(ticket.destinationCode),
       'departureTime':
@@ -174,14 +174,43 @@ class LiveActivityService {
       'statusText': _nonEmpty(AppStrings.stationStatusOnTime),
     };
 
+    if (_useNativeFallbackOnly) {
+      return _startOrUpdateNativeActivity(activityData);
+    }
+    final bool enabled;
+    try {
+      enabled = await _liveActivities.areActivitiesEnabled();
+    } catch (_) {
+      return _startOrUpdateNativeActivity(activityData);
+    }
+    if (!enabled) {
+      throw const LiveActivityException(
+          AppStrings.liveActivityPermissionDisabled);
+    }
+
     try {
       final id = _activeActivityId;
       if (id != null) {
-        await _liveActivities.updateActivity(id, activityData);
+        try {
+          await _liveActivities.updateActivity(id, activityData);
+        } catch (_) {
+          await _iosNativeChannel.invokeMethod<void>('update', {
+            'activityId': id,
+            'data': activityData,
+          });
+        }
         return id;
       }
 
-      final activityId = await _liveActivities.createActivity(activityData);
+      String? activityId;
+      try {
+        activityId = await _liveActivities.createActivity(activityData);
+      } catch (_) {
+        activityId = await _iosNativeChannel.invokeMethod<String>(
+          'start',
+          activityData,
+        );
+      }
       if (activityId == null) {
         throw const LiveActivityException(AppStrings.liveActivitySetupError);
       }
@@ -200,7 +229,7 @@ class LiveActivityService {
   Future<void> endActivity([String? activityId]) async {
     final id = activityId ?? _activeActivityId;
     if (id == null) return;
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       try {
         await _androidChannel.invokeMethod<void>(
           'end',
@@ -216,13 +245,56 @@ class LiveActivityService {
     }
     try {
       final normalizedId = _normalizeActivityId(id);
-      await _liveActivities.endActivity(normalizedId);
+      try {
+        await _liveActivities.endActivity(normalizedId);
+      } catch (_) {
+        await _iosNativeChannel.invokeMethod<void>('end', normalizedId);
+      }
       if (_activeActivityId == normalizedId) {
         _activeActivityId = null;
       }
     } catch (error) {
       throw LiveActivityException(
         '${AppStrings.liveActivityEndError} (${_nativeErrorDetail(error)})',
+      );
+    }
+  }
+
+  Future<String> _startNativeActivity(Map<String, dynamic> activityData) async {
+    try {
+      final id = await _iosNativeChannel.invokeMethod<String>(
+        'start',
+        activityData,
+      );
+      if (id == null) {
+        throw const LiveActivityException(AppStrings.liveActivitySetupError);
+      }
+      final normalizedId = _normalizeActivityId(id);
+      _activeActivityId = normalizedId;
+      return normalizedId;
+    } catch (error) {
+      throw LiveActivityException(
+        '${AppStrings.liveActivitySetupError} (${_nativeErrorDetail(error)})',
+      );
+    }
+  }
+
+  Future<String> _startOrUpdateNativeActivity(
+    Map<String, dynamic> activityData,
+  ) async {
+    try {
+      final id = _activeActivityId;
+      if (id != null) {
+        await _iosNativeChannel.invokeMethod<void>('update', {
+          'activityId': id,
+          'data': activityData,
+        });
+        return id;
+      }
+      return await _startNativeActivity(activityData);
+    } catch (error) {
+      throw LiveActivityException(
+        '${AppStrings.liveActivitySetupError} (${_nativeErrorDetail(error)})',
       );
     }
   }

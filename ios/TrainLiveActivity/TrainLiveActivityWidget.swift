@@ -3,24 +3,36 @@ import SwiftUI
 import WidgetKit
 
 private enum ActivityData {
-    static func string(_ key: String, context: ActivityViewContext<LiveActivitiesAppAttributes>) -> String {
+    static func string(_ key: String, context: ActivityViewContext<TrainActivityAttributes>) -> String {
         UserDefaults(suiteName: context.state.appGroupId)?
             .string(forKey: context.attributes.prefixedKey(key)) ?? "—"
     }
 
-    static func number(_ key: String, context: ActivityViewContext<LiveActivitiesAppAttributes>) -> Double {
+    static func number(_ key: String, context: ActivityViewContext<TrainActivityAttributes>) -> Double {
         UserDefaults(suiteName: context.state.appGroupId)?
             .double(forKey: context.attributes.prefixedKey(key)) ?? 0
     }
 
-    static func operatorLabel(context: ActivityViewContext<LiveActivitiesAppAttributes>) -> String {
+    static func color(_ key: String, context: ActivityViewContext<TrainActivityAttributes>) -> Color {
+        let token = string(key, context: context)
+        guard let value = UInt32(token, radix: 16) else {
+            return Color(red: 0.77, green: 0.84, blue: 0)
+        }
+        return Color(
+            red: Double((value >> 16) & 0xff) / 255,
+            green: Double((value >> 8) & 0xff) / 255,
+            blue: Double(value & 0xff) / 255
+        )
+    }
+
+    static func operatorLabel(context: ActivityViewContext<TrainActivityAttributes>) -> String {
         string(TrainLiveActivityPayloadKey.operatorName, context: context).uppercased()
     }
 }
 
 struct TrainLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
+        ActivityConfiguration(for: TrainActivityAttributes.self) { context in
             lockScreenView(context)
                 .activityBackgroundTint(Color(red: 0.04, green: 0.12, blue: 0.09))
                 .activitySystemActionForegroundColor(.white)
@@ -29,6 +41,8 @@ struct TrainLiveActivityWidget: Widget {
             let destination = ActivityData.string(TrainLiveActivityPayloadKey.destinationCode, context: context)
             let platform = ActivityData.string(TrainLiveActivityPayloadKey.platform, context: context)
             let progress = min(max(ActivityData.number(TrainLiveActivityPayloadKey.progress, context: context), 0), 1)
+            let accent = ActivityData.color("operatorAccent", context: context)
+            let primary = ActivityData.color("operatorPrimary", context: context)
 
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -48,34 +62,42 @@ struct TrainLiveActivityWidget: Widget {
                             .lineLimit(1)
                         Text("VÍA \(platform)")
                             .font(.caption2.weight(.bold))
-                            .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                            .foregroundStyle(accent)
                             .lineLimit(1)
+                    Text(ActivityData.operatorLabel(context: context))
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(accent)
+                        .lineLimit(1)
+                        .padding(.horizontal, 5)
+                        .background(primary.opacity(0.55), in: Capsule())
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    routeProgress(progress)
+                routeProgress(progress, accent: accent)
                         .padding(.top, 4)
                 }
             } compactLeading: {
                 Image(systemName: "tram.fill")
-                    .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                .foregroundStyle(accent)
             } compactTrailing: {
                 Text(platform == "Por asignar" ? "—" : platform)
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(.white)
             } minimal: {
                 Image(systemName: "tram.fill")
-                    .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                .foregroundStyle(accent)
             }
-            .keylineTint(Color(red: 0, green: 0.39, blue: 0.22))
+            .keylineTint(accent)
         }
     }
 
     private func lockScreenView(
-        _ context: ActivityViewContext<LiveActivitiesAppAttributes>
+        _ context: ActivityViewContext<TrainActivityAttributes>
     ) -> some View {
         let progress = min(max(ActivityData.number(TrainLiveActivityPayloadKey.progress, context: context), 0), 1)
         let coach = ActivityData.string(TrainLiveActivityPayloadKey.coach, context: context)
+        let accent = ActivityData.color("operatorAccent", context: context)
+        let primary = ActivityData.color("operatorPrimary", context: context)
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
@@ -92,7 +114,7 @@ struct TrainLiveActivityWidget: Widget {
 
                 Image(systemName: "tram.fill")
                     .font(.title3)
-                    .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                    .foregroundStyle(accent)
                     .padding(.top, 8)
 
                 Spacer(minLength: 8)
@@ -107,7 +129,7 @@ struct TrainLiveActivityWidget: Widget {
                 }
             }
 
-            routeProgress(progress)
+            routeProgress(progress, accent: accent)
 
             HStack(alignment: .center) {
                 Label(ActivityData.string(TrainLiveActivityPayloadKey.trainNumber, context: context), systemImage: "train.side.front.car")
@@ -135,7 +157,10 @@ struct TrainLiveActivityWidget: Widget {
                 Spacer()
                 Text(ActivityData.operatorLabel(context: context))
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                    .foregroundStyle(accent)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(primary.opacity(0.55), in: Capsule())
             }
         }
         .padding(.horizontal, 16)
@@ -152,7 +177,7 @@ struct TrainLiveActivityWidget: Widget {
         }
     }
 
-    private func routeProgress(_ progress: Double) -> some View {
+    private func routeProgress(_ progress: Double, accent: Color) -> some View {
         GeometryReader { geometry in
             let trackWidth = max(geometry.size.width - 14, 0)
 
@@ -161,7 +186,7 @@ struct TrainLiveActivityWidget: Widget {
                     .fill(.white.opacity(0.2))
                     .frame(height: 3)
                 Capsule()
-                    .fill(Color(red: 0.77, green: 0.84, blue: 0))
+                    .fill(accent)
                     .frame(width: trackWidth * progress, height: 3)
                 Circle()
                     .fill(.white.opacity(0.55))
@@ -169,7 +194,7 @@ struct TrainLiveActivityWidget: Widget {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Image(systemName: "tram.fill")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(red: 0.77, green: 0.84, blue: 0))
+                    .foregroundStyle(accent)
                     .offset(x: trackWidth * CGFloat(progress))
             }
             .frame(height: 18)

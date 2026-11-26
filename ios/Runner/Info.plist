@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ADIF Connect</string>
+	<string>AndénLibre</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -32,7 +32,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>adif_connect</string>
+	<string>AndénLibre</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Usamos a túa localización só cando escolles buscar a estación de tren máis próxima.</string>
 	<key>CFBundlePackageType</key>
@@ -45,10 +45,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>es.adifconnect.app.import</string>
+			<string>es.andenlibre.app.import</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>adifconnect</string>
+				<string>andenlibre</string>
 			</array>
 		</dict>
 	</array>

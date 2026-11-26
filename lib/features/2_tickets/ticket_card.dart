@@ -3,8 +3,10 @@ import '../../core/constants/adif_stations.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/operator_themes.dart';
+import '../../core/widgets/dashed_border.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../models/ticket_model.dart';
+import '../../services/track_prediction_service.dart';
 
 class TicketCard extends StatelessWidget {
   final TicketModel ticket;
@@ -44,7 +46,7 @@ class TicketCard extends StatelessWidget {
     return GlassContainer(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
-      borderRadius: 22,
+      borderRadius: 24,
       glowColor: style.primary,
       backgroundColor: cardBg,
       borderColor: AppTheme.getGlassBorder(context),
@@ -180,66 +182,73 @@ class TicketCard extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Seat details & Platform (Vía)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildDetailChip(AppStrings.ticketCar, ticket.coach, onSurface,
-                  onSurfaceVariant),
-              _buildDetailChip(AppStrings.ticketSeat, ticket.seat, onSurface,
-                  onSurfaceVariant),
-              _buildDetailChip(AppStrings.ticketClass, ticket.seatClass,
-                  onSurface, onSurfaceVariant),
-              // Platform badge
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: ticket.platform != null
-                      ? AppTheme.adifTeal
-                          .withValues(alpha: isDark ? 0.25 : 0.15)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : Colors.black.withValues(alpha: 0.05)),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: ticket.platform != null
-                        ? AppTheme.adifTeal.withValues(alpha: 0.6)
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : Colors.black.withValues(alpha: 0.12)),
-                    width: 1,
+          FutureBuilder<TicketTrackInfo>(
+            future: TrackPredictionService.instance.forTicket(ticket),
+            builder: (context, snapshot) {
+              final info = snapshot.data;
+              final livePlatform = info?.departurePlatform ?? ticket.platform;
+              final predictedPlatform = livePlatform == null
+                  ? info?.predictedPlatform ?? ticket.predictedPlatform
+                  : null;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 10,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _buildDetailChip(AppStrings.ticketCar, ticket.coach,
+                      onSurface, onSurfaceVariant),
+                  _buildDetailChip(AppStrings.ticketSeat, ticket.seat,
+                      onSurface, onSurfaceVariant),
+                  _buildDetailChip(AppStrings.ticketClass, ticket.seatClass,
+                      onSurface, onSurfaceVariant),
+                  _buildPlatformPill(
+                    AppStrings.ticketPlatform,
+                    livePlatform ??
+                        predictedPlatform ??
+                        AppStrings.ticketPlatformPending,
+                    isDark,
+                    isPredicted:
+                        livePlatform == null && predictedPlatform != null,
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${AppStrings.ticketPlatform}: ',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: ticket.platform != null
-                            ? AppTheme.adifTeal
-                            : onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      ticket.platform ?? AppStrings.ticketPlatformPending,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: ticket.platform != null
-                            ? (isDark ? Colors.white : AppTheme.adifPrimary)
-                            : onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPlatformPill(
+    String label,
+    String value,
+    bool isDark, {
+    bool isPredicted = false,
+  }) {
+    final color = isPredicted
+        ? (isDark ? AppTheme.adifAmberDarkText : AppTheme.adifAmberLightText)
+        : (isDark
+            ? AppTheme.adifPlatformDarkText
+            : AppTheme.adifPlatformLightText);
+    final text = Text(
+      '$label: $value${isPredicted ? ' (${AppStrings.ticketPredictedShort})' : ''}',
+      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color),
+    );
+    if (isPredicted) {
+      return DashedBorder(
+        borderColor: color,
+        backgroundColor: color.withValues(alpha: 0.08),
+        child: text,
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: text,
     );
   }
 

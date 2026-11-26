@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -25,8 +24,8 @@ class LiquidGlassContainer extends StatelessWidget {
     this.height,
     this.padding = const EdgeInsets.all(16),
     this.margin,
-    this.borderRadius = 20,
-    this.blurSigma = 12,
+    this.borderRadius = 24,
+    this.blurSigma = 20,
     this.backgroundColor,
     this.borderColor,
     this.glowColor,
@@ -36,58 +35,39 @@ class LiquidGlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final isIos = Platform.isIOS;
     final surface = backgroundColor ??
         (isDark
-            ? const Color(0xFF17212B).withValues(alpha: isIos ? 0.84 : 0.96)
-            : Colors.white.withValues(alpha: isIos ? 0.78 : 0.96));
+            ? const Color(0xFF161F2A).withValues(alpha: 0.82)
+            : Colors.white.withValues(alpha: 0.78));
     final edge = borderColor ??
-        (isDark
-            ? const Color(0xFF334155)
-            : Colors.white.withValues(alpha: isIos ? 0.65 : 0.82));
+        (isDark ? const Color(0xFF2B394A) : const Color(0xFFD0D9E2));
 
-    Widget content = ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: edge, width: 1),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomCenter,
-              colors: isDark
-                  ? [
-                      Colors.white.withValues(alpha: 0.10),
-                      surface,
-                      const Color(0xFF101820).withValues(alpha: 0.88),
-                    ]
-                  : [
-                      Colors.white.withValues(alpha: 0.90),
-                      Colors.white.withValues(alpha: 0.42),
-                      surface,
-                    ],
-              stops: const [0, 0.32, 1],
-            ),
-            boxShadow: isIos
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.22 : 0.10,
-                      ),
-                      blurRadius: 18,
-                      spreadRadius: -8,
-                      offset: const Offset(0, 7),
-                    ),
-                  ]
-                : const [],
+    Widget content = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: (glowColor ?? AppTheme.adifTeal)
+                .withValues(alpha: isDark ? 0.08 : 0.06),
+            blurRadius: 22,
+            spreadRadius: -6,
+            offset: const Offset(0, 8),
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
           child: Container(
             width: width,
             height: height,
             padding: padding,
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(color: edge, width: 1),
+            ),
             child: child,
           ),
         ),

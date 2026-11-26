@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/station_picker_field.dart';
 import '../../models/ticket_model.dart';
 import '../../services/adif_live_repository.dart';
+import '../../services/local_file_system.dart';
 import '../../services/pkpass_parser_service.dart';
 import '../../services/pdf_ticket_parser_service.dart';
 import '../../services/ticket_repository.dart';
@@ -417,8 +417,8 @@ class _ImportScreenState extends State<ImportScreen> {
         }
 
         List<int>? bytes = file.bytes;
-        if (bytes == null && file.path != null) {
-          bytes = await File(file.path!).readAsBytes();
+        if (bytes == null && !kIsWeb && file.path != null) {
+          bytes = await readLocalFileBytes(file.path!);
         }
 
         if (bytes == null) {
@@ -431,12 +431,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
         final fileBytes =
             bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
-        if (extension == 'pdf') {
-          final tempFile = File(
-            '${Directory.systemTemp.path}/adif_connect_${DateTime.now().microsecondsSinceEpoch}.pdf',
-          );
-          await tempFile.writeAsBytes(fileBytes, flush: true);
-        }
         final ticket = extension == 'pdf'
             ? await PdfTicketParserService.parse(fileBytes)
             : PkpassParserService.parse(fileBytes);
@@ -932,7 +926,7 @@ class _ImportScreenState extends State<ImportScreen> {
             20,
             12,
             20,
-            MediaQuery.of(context).padding.bottom + 12,
+            MediaQuery.of(context).padding.bottom + 140,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1053,7 +1047,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 const SizedBox(height: 16),
                 GlassContainer(
                   padding: const EdgeInsets.all(12),
-                  borderRadius: 14,
+                  borderRadius: 24,
                   borderColor: _isError
                       ? Colors.redAccent.withValues(alpha: 0.5)
                       : AppTheme.adifTeal.withValues(alpha: 0.5),
@@ -1098,7 +1092,7 @@ class _ImportScreenState extends State<ImportScreen> {
     final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
     return GlassContainer(
       padding: const EdgeInsets.all(18),
-      borderRadius: 22,
+      borderRadius: 24,
       glowColor: style.primary,
       backgroundColor: style.primary.withValues(
         alpha: AppTheme.isDark(context) ? 0.2 : 0.08,
@@ -1136,8 +1130,9 @@ class _ImportScreenState extends State<ImportScreen> {
               Expanded(
                 child: Text(
                   AdifStations.resolveName(ticket.origin),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
                   style: TextStyle(
                     color: onSurface,
                     fontSize: 18,
@@ -1154,8 +1149,9 @@ class _ImportScreenState extends State<ImportScreen> {
                 child: Text(
                   AdifStations.resolveName(ticket.destination),
                   textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
                   style: TextStyle(
                     color: onSurface,
                     fontSize: 18,
@@ -1212,7 +1208,7 @@ class _ImportScreenState extends State<ImportScreen> {
             : AppTheme.adifTeal;
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      borderRadius: 20,
+      borderRadius: 24,
       backgroundColor: AppTheme.adifPrimary.withValues(
         alpha: AppTheme.isDark(context) ? 0.28 : 0.08,
       ),
@@ -1294,7 +1290,7 @@ class _ImportScreenState extends State<ImportScreen> {
     final theme = Theme.of(context);
     return GlassContainer(
       padding: const EdgeInsets.all(18),
-      borderRadius: 20,
+      borderRadius: 24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

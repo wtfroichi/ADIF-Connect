@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adif_connect/models/station_board_model.dart';
+import 'package:anden_libre/models/station_board_model.dart';
 
 void main() {
   test('normalizes missing and invalid platform values', () {

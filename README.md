@@ -1,10 +1,10 @@
-# ADIF Connect
+# AndénLibre
 
 **Unha aplicación  para consultar as circulacións de ADIF e gardar billetes nun só lugar.**
 
 [Read this page in English](README.en.md)
 
-ADIF Connect é unha APP Flutter para iOS, Android e Web. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
+AndénLibre é unha APP Flutter para iOS, Android e Web. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
 
 > **Estado do proxecto:** en desenvolvemento. A dispoñibilidade e a precisión dos datos dependen de varios servizos externos. Comproba sempre a información nos paneis oficiais da estación e no billete orixinal. Non me fago responsable de ningún problema derivado do emprego da app a estas alturas.
 
@@ -22,7 +22,7 @@ ADIF Connect é unha APP Flutter para iOS, Android e Web. Permite importar bille
 - **Google Wallet en Android:** importación experimental de ligazóns Save to Google Wallet con datos que o conversor poida recoñecer.
 - **Deseño adaptado ás plataformas:** interface en galego, identidade ADIF e superficies Liquid Glass en iOS.
 
-ADIF Connect non incorpora billetes nin horarios ficticios. Se unha estación non ofrece datos ou o servizo non responde, a aplicación non pode garantir que haxa información dispoñible.
+AndénLibre non incorpora billetes nin horarios ficticios. Se unha estación non ofrece datos ou o servizo non responde, a aplicación non pode garantir que haxa información dispoñible.
 
 ## Compatibilidade e requisitos
 
@@ -151,4 +151,4 @@ As contribucións son benvidas. Para cambios de código:
 
 ---
 
-ADIF Connect é un proxecto independente e non implica afiliación nin respaldo de ADIF, Renfe, Apple, Google ou Supabase. Asimesmo, trátase dun proxecto aberto e sen ánimo de lucro. Se calquera marca implicada quixer ser removida deste proxecto a modo de imaxe, fágaseme saber en dev@rprieto.com.
+AndénLibre é un proxecto independente e non implica afiliación nin respaldo de ADIF, Renfe, Apple, Google ou Supabase. Asimesmo, trátase dun proxecto aberto e sen ánimo de lucro. Se calquera marca implicada quixer ser removida deste proxecto a modo de imaxe, fágaseme saber en dev@rprieto.com.

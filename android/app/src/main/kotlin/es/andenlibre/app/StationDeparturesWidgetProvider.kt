@@ -1,4 +1,4 @@
-package es.adifconnect.adif_connect
+package es.andenlibre.app
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -25,7 +25,7 @@ class StationDeparturesWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE ||
-            intent.action == "es.adifconnect.app/widget-refresh"
+            intent.action == "es.andenlibre.app/widget-refresh"
         ) {
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(

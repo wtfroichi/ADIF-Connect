@@ -2,18 +2,19 @@
 /// Zero-boilerplate localization without code generation.
 abstract final class AppStrings {
   // App General
-  static const String appName = 'ADIF Connect';
+  static const String appName = 'AndénLibre';
 
   // Bottom Navigation Bar
   static const String navHome = 'Inicio';
   static const String navTickets = 'Billetes';
   static const String navStations = 'Tempo real';
+  static const String navMap = 'Mapa';
   static const String navSettings = 'Axustes';
 
   // Tab 1: Import / Home
   static const String importTitle = 'Importar billete';
   static const String homeGreeting = 'Ola, onde viaxas hoxe?';
-  static const String homeWelcome = 'Benvido a ADIF Connect';
+  static const String homeWelcome = 'Benvido a AndénLibre';
   static const String homeUpcomingTrip = 'A túa próxima viaxe';
   static const String homeDepartureIn = 'Saída en';
   static const String homeTripNow = 'A viaxe comeza agora';
@@ -127,7 +128,12 @@ abstract final class AppStrings {
   static const String ticketSeat = 'Asento';
   static const String ticketClass = 'Clase';
   static const String ticketPlatform = 'Vía';
+  static const String ticketArrivalPlatform = 'Vía de chegada';
   static const String ticketPlatformPending = 'Por asignar';
+  static const String ticketPredictedPlatform = 'Vía prevista';
+  static const String ticketPredictedShort = 'prev.';
+  static const String ticketPredictionHistory =
+      'Previsión segundo os días anteriores';
   static const String ticketPassenger = 'Pasaxeiro';
   static const String ticketLocalizer = 'Localizador';
   static const String ticketClose = 'Pechar';
@@ -165,6 +171,7 @@ abstract final class AppStrings {
   static const String stationUnknownName = 'Estación non recoñecida';
   static const String stationsNoResults = 'Non se atoparon estacións';
   static const String stationVia = 'Vía';
+  static const String stationArrivalVia = 'Vía de chegada';
   static const String stationNearestAction = 'Usar a estación máis próxima';
   static const String stationNearestLoading = 'Buscando estación máis próxima…';
   static const String stationSetAsDefault = 'Usar como predeterminada';
@@ -183,6 +190,7 @@ abstract final class AppStrings {
       'Coordenadas: © OpenStreetMap contributors (ODbL).';
   static const String stationDestination = 'Destino';
   static const String stationTime = 'Hora';
+  static const String stationEstimatedTimeLabel = 'Hora prevista';
   static const String stationTrain = 'Tren';
   static const String stationStops = 'Paradas';
   static const String stationLiveClock = 'Hora local';
@@ -193,7 +201,30 @@ abstract final class AppStrings {
       'Non se puideron cargar as circulacións. Comproba a conexión e téntao de novo.';
   static const String stationNoCommercialBrand = 'RENFE';
 
-  // Tab 4: Settings
+  // Tab 4: Live train map
+  static const String mapTitle = 'Mapa';
+  static const String mapFilterAll = 'Todos';
+  static const String mapFilterHighSpeed = 'AVE / AVANT / AVLO';
+  static const String mapFilterRegional = 'INTERCITY / REGIONAL';
+  static const String mapLoading = 'A cargar as posicións…';
+  static const String mapUnavailable =
+      'Non se puideron cargar as posicións dos trens.';
+  static const String mapNoPositions =
+      'Non hai posicións dispoñibles neste momento.';
+  static const String mapOsmAttribution = '© OpenStreetMap contributors';
+  static const String mapRenfeAttribution = 'RENFE (CC BY 4.0)';
+  static const String mapSpeedUnavailable = 'Velocidade non dispoñible';
+  static const String mapSpeedUnit = 'km/h';
+  static const String mapDelayMinuteUnit = 'min';
+  static const String mapDelayUnavailable = 'Atraso non dispoñible';
+  static const String mapNextStop = 'Próxima estación';
+  static const String mapOrigin = 'Orixe';
+  static const String mapDestination = 'Destino';
+  static const String mapPlatform = 'Vía';
+  static const String mapUpdatedAt = 'Actualizado';
+  static const String mapUnknownService = 'Servizo RENFE';
+
+  // Tab 5: Settings
   static const String settingsTitle = 'Configuración';
   static const String settingsLiveActivities = 'Actividades en directo';
   static const String settingsLiveActivitiesDesc =
@@ -220,5 +251,58 @@ abstract final class AppStrings {
       'Actualización cada 30 segundos con validación en directo.';
   static const String settingsWalletPrivacy = 'Apple Wallet (.pkpass)';
   static const String settingsWalletPrivacyDescription =
-      'Os billetes analízanse no dispositivo; os datos persoais non se envían a servidores externos.';
+      'Os billetes gárdanse no dispositivo; só se sincronizan coa túa conta se activas esta opción.';
+
+  // Account and ticket synchronization
+  static const String accountSyncTitle = 'Conta e sincronización';
+  static const String accountSyncSignedOutDescription =
+      'Inicia sesión para gardar e sincronizar os teus billetes de xeito privado entre dispositivos.';
+  static const String accountSignInOrCreate = 'Iniciar sesión ou crear conta';
+  static const String accountSyncSignedInStatus = 'Sincronizado na nube';
+  static const String accountSyncInProgress = 'A sincronizar…';
+  static const String accountSyncPending = 'Aínda sen sincronizar';
+  static const String accountSyncFailedStatus = 'Non se puido sincronizar';
+  static const String accountSyncNow = 'Sincronizar agora';
+  static const String accountSignOut = 'Pechar sesión';
+  static const String accountAuthTitle = 'Conta de AndénLibre';
+  static const String accountEmail = 'Correo electrónico';
+  static const String accountPassword = 'Contrasinal';
+  static const String accountCode = 'Código de seis cifras';
+  static const String accountSignIn = 'Iniciar sesión';
+  static const String accountSignUp = 'Crear conta';
+  static const String accountHaveAccount = 'Xa tes conta? Inicia sesión';
+  static const String accountNeedAccount = 'Non tes conta? Crea unha';
+  static const String accountUsePassword = 'Usar correo e contrasinal';
+  static const String accountUseCode = 'Usar código enviado por correo';
+  static const String accountSendCode = 'Enviar código';
+  static const String accountVerifyCode = 'Verificar código';
+  static const String accountCodeSent =
+      'Enviamos unha ligazón ou un código ao teu correo electrónico.';
+  static const String accountCheckEmail =
+      'Revisa o correo para confirmar a creación da conta.';
+  static const String accountAuthInvalidCredentials =
+      'O correo electrónico ou o contrasinal non son correctos.';
+  static const String accountEmailNotConfirmed =
+      'Confirma o teu enderezo de correo electrónico antes de iniciar sesión.';
+  static const String accountEmailAlreadyRegistered =
+      'Xa existe unha conta con ese correo electrónico.';
+  static const String accountPasswordTooShort =
+      'O contrasinal non cumpre os requisitos mínimos.';
+  static const String accountInvalidCode =
+      'O código non é válido ou caducou. Solicita outro.';
+  static const String accountRateLimited =
+      'Demasiadas solicitudes. Agarda un pouco e téntao de novo.';
+  static const String accountAuthRequestFailed =
+      'Non se puido completar a autenticación.';
+  static const String accountConnectionFailed =
+      'Non hai conexión co servizo. Téntao de novo.';
+  static const String accountSyncFailed =
+      'Non se puideron sincronizar os billetes. Consérvanse neste dispositivo.';
+  static const String accountRequired =
+      'Inicia sesión para sincronizar os billetes.';
+  static const String accountSignOutFailed =
+      'Non se puido pechar a sesión. Téntao de novo.';
+  static const String accountEmailRequired = 'Escribe un correo válido.';
+  static const String accountPasswordRequired = 'Escribe o contrasinal.';
+  static const String accountCodeRequired = 'Escribe o código de seis cifras.';
 }

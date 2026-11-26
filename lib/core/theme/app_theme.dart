@@ -128,8 +128,10 @@ abstract final class AppTheme {
       fontFamily: '.SF Pro Text',
       appBarTheme: const AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        backgroundColor: lightBackground,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         toolbarHeight: 44,
         titleTextStyle: TextStyle(
@@ -167,8 +169,10 @@ abstract final class AppTheme {
       fontFamily: '.SF Pro Text',
       appBarTheme: const AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        backgroundColor: darkBackground,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         toolbarHeight: 44,
         titleTextStyle: TextStyle(

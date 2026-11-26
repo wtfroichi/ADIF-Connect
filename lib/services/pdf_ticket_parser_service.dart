@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../core/constants/adif_stations.dart';
@@ -8,7 +8,7 @@ import '../core/theme/operator_themes.dart';
 import '../models/ticket_model.dart';
 
 abstract final class PdfTicketParserService {
-  static const MethodChannel _channel = MethodChannel('es.adifconnect.app/pdf');
+  static const MethodChannel _channel = MethodChannel('es.andenlibre.app/pdf');
   static final RegExp _timePattern = RegExp(r'\b(?:[01]?\d|2[0-3]):[0-5]\d\b');
   static final RegExp _datePattern = RegExp(
     r'\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b|\b(20\d{2})-(\d{2})-(\d{2})\b',
@@ -16,7 +16,7 @@ abstract final class PdfTicketParserService {
 
   static Future<TicketModel> parse(Uint8List bytes) async {
     String? text;
-    if (Platform.isAndroid) {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android) {
       final document = PdfDocument(inputBytes: bytes);
       try {
         text = PdfTextExtractor(document).extractText();

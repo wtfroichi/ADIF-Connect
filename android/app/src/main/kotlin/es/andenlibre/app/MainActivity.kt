@@ -1,4 +1,4 @@
-package es.adifconnect.adif_connect
+package es.andenlibre.app
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -41,13 +41,13 @@ class MainActivity : FlutterActivity() {
 
         sharingChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "es.adifconnect.app/sharing"
+            "es.andenlibre.app/sharing"
         )
         sharingChannel?.setMethodCallHandler(::handleSharingCall)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "es.adifconnect.app/pdf"
+            "es.andenlibre.app/pdf"
         ).setMethodCallHandler { call, result ->
             if (call.method == "extractPdfText") {
                 val bytes = call.arguments as? ByteArray
@@ -63,14 +63,14 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "es.adifconnect.app/widget-cache"
+            "es.andenlibre.app/widget-cache"
         ).setMethodCallHandler { call, result ->
             handleWidgetCacheCall(call, result)
         }
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "es.adifconnect.app/live_activity"
+            "es.andenlibre.app/live_activity"
         ).setMethodCallHandler { call, result ->
             handleLiveActivityCall(call, result)
         }
@@ -215,7 +215,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun startOrUpdateTripNotification(id: Int, args: Map<*, *>) {
-        val channelId = "adif_connect_live_trip"
+        val channelId = "andenlibre_live_trip"
         val manager = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -234,6 +234,8 @@ class MainActivity : FlutterActivity() {
         val coach = args["coach"] as? String ?: ""
         val seat = args["seat"] as? String ?: ""
         val progress = (args["progress"] as? Number)?.toInt()?.coerceIn(0, 100) ?: 0
+        val operatorPrimary = (args["operatorPrimary"] as? Number)?.toInt()
+            ?: 0xff006338.toInt()
 
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -249,6 +251,7 @@ class MainActivity : FlutterActivity() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            .setColor(operatorPrimary)
             .setContentIntent(pendingIntent)
             .setContentTitle("$origin → $destination")
             .setContentText("$departure · $platform · Coche $coach · Asento $seat")

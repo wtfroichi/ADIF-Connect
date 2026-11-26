@@ -17,6 +17,8 @@ interface StationBoardItem {
   origin: string;
   stops: string[];
   platform?: string;
+  predictedPlatform?: string;
+  predictionConfidence?: number;
   status: string;
   delayMinutes?: number;
 }
@@ -352,6 +354,130 @@ function platformFromTrain(
   return candidates.map(sanitizePlatform).find((value) => value != null);
 }
 
+function madridDate(now: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const part = (type: string) => parts.find((value) => value.type === type)?.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+async function storeTrackHistory(
+  stationCode: string,
+  direction: string,
+  items: StationBoardItem[],
+  now: Date,
+): Promise<void> {
+  const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!baseUrl || !serviceRoleKey) return;
+
+  const serviceDate = madridDate(now);
+  const rows = items.flatMap((item) => {
+    // Renfe's open Cercanías GTFS-RT dataset documents platform values in the
+    // vehicle label; do not retain inferred platforms from other feeds.
+    if (!item.trainType.toUpperCase().includes("CERCAN")) return [];
+    const platform = sanitizePlatform(item.platform);
+    return platform && item.trainNumber.trim()
+      ? [{
+        station_code: stationCode,
+        train_number: item.trainNumber.trim(),
+        service_brand: item.trainType || item.operator,
+        direction,
+        assigned_platform: platform,
+        service_date: serviceDate,
+        recorded_at: now.toISOString(),
+      }]
+      : [];
+  });
+  if (rows.length === 0) return;
+
+  try {
+    const response = await fetch(
+      `${baseUrl}/rest/v1/train_track_history?on_conflict=station_code,train_number,direction,service_date`,
+      {
+        method: "POST",
+        headers: {
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify(rows),
+        signal: AbortSignal.timeout(2500),
+      },
+    );
+    if (!response.ok) throw new Error(`Track history write returned HTTP ${response.status}`);
+  } catch (error) {
+    console.error("Non se puido gardar o historial de vías:", error);
+  }
+}
+
+async function addTrackPredictions(
+  stationCode: string,
+  direction: string,
+  items: StationBoardItem[],
+  now: Date,
+): Promise<void> {
+  const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const candidates = items.filter((item) => !sanitizePlatform(item.platform));
+  if (!baseUrl || !serviceRoleKey || candidates.length === 0) return;
+
+  const trainNumbers = [...new Set(candidates.map((item) => item.trainNumber.trim()))]
+    .filter((value) => /^[-A-Za-z0-9_]+$/.test(value));
+  if (trainNumbers.length === 0) return;
+
+  const query = new URL(`${baseUrl}/rest/v1/train_track_history`);
+  query.searchParams.set("select", "train_number,assigned_platform");
+  query.searchParams.set("station_code", `eq.${stationCode}`);
+  query.searchParams.set("direction", `eq.${direction}`);
+  query.searchParams.set("train_number", `in.(${trainNumbers.join(",")})`);
+  query.searchParams.set("service_date", `lt.${madridDate(now)}`);
+  query.searchParams.set(
+    "recorded_at",
+    `gte.${new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString()}`,
+  );
+  query.searchParams.set("limit", "1000");
+
+  try {
+    const response = await fetch(query, {
+      headers: {
+        "apikey": serviceRoleKey,
+        "Authorization": `Bearer ${serviceRoleKey}`,
+        "Accept": "application/json",
+      },
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!response.ok) throw new Error(`Track history read returned HTTP ${response.status}`);
+    const rows = records(await response.json());
+    const grouped = new Map<string, Map<string, number>>();
+    for (const row of rows) {
+      const trainNumber = String(row.train_number ?? "");
+      const platform = sanitizePlatform(row.assigned_platform);
+      if (!trainNumber || !platform) continue;
+      const platforms = grouped.get(trainNumber) ?? new Map<string, number>();
+      platforms.set(platform, (platforms.get(platform) ?? 0) + 1);
+      grouped.set(trainNumber, platforms);
+    }
+
+    for (const item of candidates) {
+      const platforms = grouped.get(item.trainNumber.trim());
+      if (!platforms || platforms.size === 0) continue;
+      const ranked = [...platforms.entries()].sort((a, b) => b[1] - a[1]);
+      const [predictedPlatform, votes] = ranked[0];
+      const total = ranked.reduce((sum, [, count]) => sum + count, 0);
+      item.predictedPlatform = predictedPlatform;
+      item.predictionConfidence = total > 0 ? votes / total : undefined;
+    }
+  } catch (error) {
+    console.error("Non se puideron calcular as previsións de vía:", error);
+  }
+}
+
 function madridMinuteOfDay(now: Date): number {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Madrid",
@@ -556,6 +682,10 @@ serve(async (req) => {
     const sourceAvailable = type === "arrivals"
       ? results[1].status === "fulfilled" || results[2].status === "fulfilled"
       : results[1].status === "fulfilled";
+    if (sourceAvailable) {
+      await storeTrackHistory(station.code, type, items, new Date(now));
+      await addTrackPredictions(station.code, type, items, new Date(now));
+    }
     const board: CachedBoard = {
       items,
       error: items.length === 0

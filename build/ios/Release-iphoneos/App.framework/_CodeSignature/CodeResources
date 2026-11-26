@@ -10,7 +10,7 @@
 		</data>
 		<key>flutter_assets/AssetManifest.bin</key>
 		<data>
-		Wu2CgdI3UPnrP5JXG4aNlV3IFog=
+		3qpYdVUEu9IHDk71WXAaJ51gTf8=
 		</data>
 		<key>flutter_assets/FontManifest.json</key>
 		<data>
@@ -18,7 +18,7 @@
 		</data>
 		<key>flutter_assets/NOTICES.Z</key>
 		<data>
-		qSdz0tqN/9IxG7IqFFeCPVHBJDM=
+		looG2rinoktIqOtfeQYW3jfD9zQ=
 		</data>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
 		<data>
@@ -26,15 +26,19 @@
 		</data>
 		<key>flutter_assets/fonts/MaterialIcons-Regular.otf</key>
 		<data>
-		YNxlePCbFMIVNwt7pLuTLIlMoLM=
+		SgbDb53GrfyBNOOVFj6jD+yN1DM=
 		</data>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
-		qkl1CxXJaAYOjLFiGf8LO84w4ak=
+		I0MJ8kWgL8MikIKRMk+fz4Tig1k=
 		</data>
 		<key>flutter_assets/packages/flutter_lucide/lib/fonts/lucide.ttf</key>
 		<data>
 		I4QrncEMxHB9Dt2btvd619DBTgE=
+		</data>
+		<key>flutter_assets/packages/flutter_map/lib/assets/flutter_map_logo.png</key>
+		<data>
+		kUCCgXRmQ7Ql3lxXrdQuoudq1L8=
 		</data>
 		<key>flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
@@ -51,7 +55,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			SygI5JmbTkmtGJgZDgkw0Zrxy5hSlJMGIiy5kEsLH+E=
+			RUeq9IgkUKidJotJjXIx+JZNXCWrC0Siq8QKPCYUddM=
 			</data>
 		</dict>
 		<key>flutter_assets/FontManifest.json</key>
@@ -65,7 +69,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			l/2azgDJVDE2YbptiEW5cYq4GHhdkckTAvjylvxl4Y0=
+			SSC7N3h/pnSq8sIQFdMezMiyrIpsNTNSXtyHAKRPo/o=
 			</data>
 		</dict>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
@@ -79,14 +83,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			uGPt0ZPSm+FnxWu1VFrIqfPNMF/s5eJbkzWpy5Anutc=
+			ZQizDN5tu9ZWmtZ+uFiAVjqZ7NHEiBLy5Ndck9lukOg=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			u0kNva9n94O1gPIz5G14AiwwiMrtbojUuGP4wKJt9Ek=
+			xW6BDXo9y2l7CnrJP10NE4bah3ZAvHSMzTcTABZqRZw=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/flutter_lucide/lib/fonts/lucide.ttf</key>
@@ -94,6 +98,13 @@
 			<key>hash2</key>
 			<data>
 			PFAcb/1Kt0ohOOU0jvg4fdtTKZYb5O1ccw7QtqYEITA=
+			</data>
+		</dict>
+		<key>flutter_assets/packages/flutter_map/lib/assets/flutter_map_logo.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			YFGuQvtQWTGoM+WPkgmp+WZppNDks/BvbYLN4SoOBAE=
 			</data>
 		</dict>
 		<key>flutter_assets/shaders/ink_sparkle.frag</key>

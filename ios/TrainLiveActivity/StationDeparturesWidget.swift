@@ -72,7 +72,7 @@ private struct StationDeparturesProvider: TimelineProvider {
     }
 
     private func readEntry() -> StationDeparturesEntry {
-        let defaults = UserDefaults(suiteName: "group.es.adifconnect.app")
+        let defaults = UserDefaults(suiteName: "group.es.andenlibre.app")
         let stationCode = defaults?.string(forKey: "defaultStationCode") ?? ""
         let stationName = defaults?.string(forKey: "defaultStationName") ?? "Estación"
         let json = defaults?.string(forKey: "stationDeparturesJSON.\(stationCode)") ?? "[]"

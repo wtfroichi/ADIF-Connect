@@ -1,7 +1,7 @@
-# AGENTS.md — ADIF Connect (iOS Edition)
+# AGENTS.md — AndénLibre (iOS Edition)
 
 ## 1. Project Identity & Core Goal
-- **App Name:** ADIF Connect (working title)
+- **App Name:** AndénLibre (working title)
 - **Target Platform:** iOS only (optimized for iOS 26/27 *Liquid Glass / Crystal* translucent aesthetics & Dynamic Island / Lock Screen Live Activities).
 - **Language & Localization Strategy:**
   - **Code, comments, git commits, variable names:** Strictly **English** (saves tokens and follows standards).

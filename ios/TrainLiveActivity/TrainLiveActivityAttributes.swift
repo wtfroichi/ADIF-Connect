@@ -30,3 +30,6 @@ extension LiveActivitiesAppAttributes {
         "\(id.uuidString)_\(key)"
     }
 }
+
+// The package requires the serialized ActivityAttributes type name above.
+typealias TrainActivityAttributes = LiveActivitiesAppAttributes

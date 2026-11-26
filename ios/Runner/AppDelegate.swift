@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import WidgetKit
+import ActivityKit
 import PDFKit
 import Vision
 
@@ -17,10 +18,86 @@ import Vision
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
     let channel = FlutterMethodChannel(
-      name: "es.adifconnect.app/sharing",
+      name: "es.andenlibre.app/sharing",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     SceneDelegate.channel = channel
+
+    let activityChannel = FlutterMethodChannel(
+      name: "es.andenlibre.app/live_activity",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    activityChannel.setMethodCallHandler { call, result in
+      guard #available(iOS 16.2, *) else {
+        result(FlutterError(
+          code: "LIVE_ACTIVITY_UNAVAILABLE",
+          message: "As actividades en directo requiren iOS 16.2 ou posterior.",
+          details: nil
+        ))
+        return
+      }
+      Task { @MainActor in
+        do {
+          switch call.method {
+          case "start":
+            guard let data = call.arguments as? [String: Any],
+                  ActivityAuthorizationInfo().areActivitiesEnabled else {
+              throw NativeActivityError.activitiesDisabled
+            }
+            guard let defaults = UserDefaults(suiteName: NativeActivityStore.appGroup) else {
+              throw NativeActivityError.appGroupUnavailable
+            }
+            let attributes = LiveActivitiesAppAttributes()
+            NativeActivityStore.write(data, id: attributes.id, to: defaults)
+            let content = ActivityContent(
+              state: LiveActivitiesAppAttributes.ContentState(
+                appGroupId: NativeActivityStore.appGroup
+              ),
+              staleDate: nil
+            )
+            let activity = try Activity<LiveActivitiesAppAttributes>.request(
+              attributes: attributes,
+              content: content,
+              pushType: nil
+            )
+            result(activity.id)
+          case "update":
+            guard let payload = call.arguments as? [String: Any],
+                  let activityId = payload["activityId"] as? String,
+                  let data = payload["data"] as? [String: Any],
+                  let activity = Activity<LiveActivitiesAppAttributes>.activities
+                    .first(where: { $0.id == activityId }),
+                  let defaults = UserDefaults(suiteName: NativeActivityStore.appGroup) else {
+              throw NativeActivityError.activityNotFound
+            }
+            NativeActivityStore.write(data, id: activity.attributes.id, to: defaults)
+            await activity.update(ActivityContent(
+              state: LiveActivitiesAppAttributes.ContentState(
+                appGroupId: NativeActivityStore.appGroup
+              ),
+              staleDate: nil
+            ))
+            result(nil)
+          case "end":
+            guard let activityId = call.arguments as? String,
+                  let activity = Activity<LiveActivitiesAppAttributes>.activities
+                    .first(where: { $0.id == activityId }) else {
+              throw NativeActivityError.activityNotFound
+            }
+            await activity.end(nil, dismissalPolicy: .immediate)
+            result(nil)
+          default:
+            result(FlutterMethodNotImplemented)
+          }
+        } catch {
+          result(FlutterError(
+            code: "LIVE_ACTIVITY_NATIVE_ERROR",
+            message: error.localizedDescription,
+            details: nil
+          ))
+        }
+      }
+    }
 
     channel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
       switch call.method {
@@ -46,7 +123,7 @@ import Vision
     }
 
     let pdfChannel = FlutterMethodChannel(
-      name: "es.adifconnect.app/pdf",
+      name: "es.andenlibre.app/pdf",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     pdfChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
@@ -77,11 +154,11 @@ import Vision
     }
 
     let widgetChannel = FlutterMethodChannel(
-      name: "es.adifconnect.app/widget-cache",
+      name: "es.andenlibre.app/widget-cache",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     widgetChannel.setMethodCallHandler { call, result in
-      guard let defaults = UserDefaults(suiteName: "group.es.adifconnect.app") else {
+      guard let defaults = UserDefaults(suiteName: "group.es.andenlibre.app") else {
         result(FlutterError(
           code: "APP_GROUP_UNAVAILABLE",
           message: "Non está dispoñible o grupo compartido da aplicación.",
@@ -134,7 +211,7 @@ import Vision
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
-    if url.scheme == "adifconnect", url.host == "import-inbox" {
+    if url.scheme == "andenlibre", url.host == "import-inbox" {
       if let channel = SceneDelegate.channel {
         channel.invokeMethod("onImportInbox", arguments: nil)
       } else {
@@ -156,8 +233,53 @@ import Vision
   }
 }
 
+struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
+  typealias LiveDeliveryData = ContentState
+
+  struct ContentState: Codable, Hashable {
+    var appGroupId: String
+
+    init(appGroupId: String) {
+      self.appGroupId = appGroupId
+    }
+  }
+
+  var id: UUID
+
+  init(id: UUID = UUID()) {
+    self.id = id
+  }
+}
+
+private enum NativeActivityStore {
+  static let appGroup = "group.es.andenlibre.app"
+
+  static func write(_ values: [String: Any], id: UUID, to defaults: UserDefaults) {
+    for (key, value) in values where key != "activityId" && key != "data" {
+      defaults.set(value, forKey: "\(id.uuidString)_\(key)")
+    }
+  }
+}
+
+private enum NativeActivityError: LocalizedError {
+  case activitiesDisabled
+  case appGroupUnavailable
+  case activityNotFound
+
+  var errorDescription: String? {
+    switch self {
+    case .activitiesDisabled:
+      return "As actividades en directo están desactivadas ou non dispoñibles."
+    case .appGroupUnavailable:
+      return "Non está dispoñible o grupo compartido da aplicación."
+    case .activityNotFound:
+      return "Non se atopou a actividade en directo solicitada."
+    }
+  }
+}
+
 private enum SharedInbox {
-  private static let appGroup = "group.es.adifconnect.app"
+  private static let appGroup = "group.es.andenlibre.app"
 
   static func filePaths() -> [String] {
     guard let container = FileManager.default.containerURL(
@@ -201,7 +323,7 @@ private enum PDFTicketTextExtractor {
   static func extract(_ data: Data) throws -> String {
     guard let document = PDFDocument(data: data) else {
       throw NSError(
-        domain: "ADIFConnect.PDF",
+        domain: "AndenLibre.PDF",
         code: 1,
         userInfo: [NSLocalizedDescriptionKey: "O ficheiro non é un PDF válido."]
       )

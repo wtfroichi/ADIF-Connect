@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../core/constants/adif_stations.dart';
@@ -8,10 +6,14 @@ import '../models/station_board_model.dart';
 
 abstract final class StationWidgetCache {
   static const MethodChannel _channel =
-      MethodChannel('es.adifconnect.app/widget-cache');
+      MethodChannel('es.andenlibre.app/widget-cache');
 
   static Future<void> updateDefaultStation(StationInfo station) async {
-    if (!Platform.isIOS && !Platform.isAndroid) return;
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.iOS &&
+            defaultTargetPlatform != TargetPlatform.android)) {
+      return;
+    }
     try {
       await _channel.invokeMethod<void>('updateDefaultStation', {
         'stationCode': station.adifCode,
@@ -29,7 +31,11 @@ abstract final class StationWidgetCache {
     StationInfo station,
     List<StationBoardItem> items,
   ) async {
-    if (!Platform.isIOS && !Platform.isAndroid) return;
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.iOS &&
+            defaultTargetPlatform != TargetPlatform.android)) {
+      return;
+    }
     try {
       await _channel.invokeMethod<void>('cacheDepartures', {
         'stationCode': station.adifCode,

@@ -1,17 +1,19 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../core/constants/app_strings.dart';
 import 'pdf_ticket_parser_service.dart';
 import 'pkpass_parser_service.dart';
+import 'local_file_system.dart';
 import 'ticket_repository.dart';
 import 'google_wallet_jwt_parser.dart';
 
 class SharingService with WidgetsBindingObserver {
   static const MethodChannel _channel =
-      MethodChannel('es.adifconnect.app/sharing');
+      MethodChannel('es.andenlibre.app/sharing');
 
   final TicketRepository ticketRepository;
   final void Function() onTicketImported;
@@ -25,6 +27,7 @@ class SharingService with WidgetsBindingObserver {
   });
 
   void init() {
+    if (kIsWeb) return;
     WidgetsBinding.instance.addObserver(this);
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -105,19 +108,19 @@ class SharingService with WidgetsBindingObserver {
 
   Future<void> _processFile(String path, {bool sharedInbox = false}) async {
     try {
-      final file = File(path);
-      if (!await file.exists()) {
-        throw FileSystemException('O ficheiro compartido xa non existe.', path);
+      if (!await localFileExists(path)) {
+        throw const FormatException('O ficheiro compartido xa non existe.');
       }
-      final bytes = await file.readAsBytes();
-      final ticket = file.path.toLowerCase().endsWith('.pdf')
+      final bytes = await readLocalFileBytes(path);
+      if (bytes == null) throw const FormatException(AppStrings.importError);
+      final ticket = path.toLowerCase().endsWith('.pdf')
           ? await PdfTicketParserService.parse(bytes)
           : PkpassParserService.parse(bytes);
       await ticketRepository.saveTicket(ticket);
       if (sharedInbox) {
         await _channel.invokeMethod<void>('removeSharedInboxItem', path);
       } else {
-        await file.delete();
+        await deleteLocalFile(path);
       }
       onTicketImported();
     } on PlatformException catch (error) {

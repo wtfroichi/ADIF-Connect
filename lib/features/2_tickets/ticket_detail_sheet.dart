@@ -7,6 +7,7 @@ import '../../core/theme/operator_themes.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../models/ticket_model.dart';
 import '../../services/live_activity_service.dart';
+import '../../services/track_prediction_service.dart';
 
 class TicketDetailSheet extends StatefulWidget {
   final TicketModel ticket;
@@ -132,7 +133,7 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
             // Main Dynamic Pass Header
             GlassContainer(
               padding: const EdgeInsets.all(20),
-              borderRadius: 22,
+              borderRadius: 24,
               backgroundColor: isDark
                   ? style.primary.withValues(alpha: 0.2)
                   : style.primary.withValues(alpha: 0.08),
@@ -251,6 +252,48 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  FutureBuilder<TicketTrackInfo>(
+                    future: TrackPredictionService.instance
+                        .forTicket(widget.ticket),
+                    builder: (context, snapshot) {
+                      final info = snapshot.data;
+                      final departure = info?.departurePlatform ??
+                          info?.predictedPlatform ??
+                          widget.ticket.platform ??
+                          widget.ticket.predictedPlatform ??
+                          AppStrings.ticketPlatformPending;
+                      final arrival = info?.arrivalPlatform ??
+                          widget.ticket.arrivalPlatform ??
+                          AppStrings.ticketPlatformPending;
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildInfoItem(
+                              AppStrings.ticketPlatform,
+                              departure,
+                              onSurface,
+                              onSurfaceVariant,
+                              highlight:
+                                  departure != AppStrings.ticketPlatformPending,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildInfoItem(
+                              AppStrings.ticketArrivalPlatform,
+                              arrival,
+                              onSurface,
+                              onSurfaceVariant,
+                              highlight:
+                                  arrival != AppStrings.ticketPlatformPending,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -315,7 +358,7 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
               // Stylized boarding summary badge when ticket has no barcode
               GlassContainer(
                 padding: const EdgeInsets.all(22),
-                borderRadius: 22,
+                borderRadius: 24,
                 borderColor:
                     style.primary.withValues(alpha: isDark ? 0.4 : 0.25),
                 child: Column(
@@ -387,7 +430,7 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
             // Seat & Passenger Info
             GlassContainer(
               padding: const EdgeInsets.all(18),
-              borderRadius: 20,
+              borderRadius: 24,
               child: Column(
                 children: [
                   _buildInfoRow(AppStrings.ticketPassenger,
@@ -420,18 +463,9 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
                       Expanded(
                           child: _buildInfoItem(AppStrings.ticketSeat,
                               widget.ticket.seat, onSurface, onSurfaceVariant)),
-                      Expanded(
-                        child: _buildInfoItem(
-                          AppStrings.ticketPlatform,
-                          widget.ticket.platform ??
-                              AppStrings.ticketPlatformPending,
-                          onSurface,
-                          onSurfaceVariant,
-                          highlight: widget.ticket.platform != null,
-                        ),
-                      ),
                     ],
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -440,7 +474,7 @@ class _TicketDetailSheetState extends State<TicketDetailSheet> {
             // Live Activity button — real wiring
             GlassContainer(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              borderRadius: 16,
+              borderRadius: 24,
               glowColor: _isActivityRunning
                   ? AppTheme.adifTeal
                   : AppTheme.renfePrimary,

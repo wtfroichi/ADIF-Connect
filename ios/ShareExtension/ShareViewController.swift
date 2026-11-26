@@ -45,7 +45,7 @@ final class ShareViewController: UIViewController {
             do {
                 let destination = try Self.saveInSharedInbox(from: url)
                 DispatchQueue.main.async {
-                    self.finish(with: "Billete gardado. Abrindo ADIF Connect…", openApp: true)
+                    self.finish(with: "Billete gardado. Abrindo AndénLibre…", openApp: true)
                     _ = destination
                 }
             } catch {
@@ -66,10 +66,10 @@ final class ShareViewController: UIViewController {
 
     private static func saveInSharedInbox(from source: URL) throws -> URL {
         guard let container = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.es.adifconnect.app"
+            forSecurityApplicationGroupIdentifier: "group.es.andenlibre.app"
         ) else {
             throw NSError(
-                domain: "ADIFConnect.ShareExtension",
+                domain: "AndenLibre.ShareExtension",
                 code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "Non está dispoñible o espazo compartido."]
             )
@@ -77,7 +77,7 @@ final class ShareViewController: UIViewController {
         let ext = source.pathExtension.lowercased()
         guard ext == "pkpass" || ext == "pdf" else {
             throw NSError(
-                domain: "ADIFConnect.ShareExtension",
+                domain: "AndenLibre.ShareExtension",
                 code: 2,
                 userInfo: [NSLocalizedDescriptionKey: "O ficheiro non é un billete PKPass ou PDF."]
             )
@@ -93,7 +93,7 @@ final class ShareViewController: UIViewController {
         DispatchQueue.main.async {
             self.statusLabel.text = message
             guard openApp, let context = self.extensionContext,
-                  let url = URL(string: "adifconnect://import-inbox") else {
+                  let url = URL(string: "andenlibre://import-inbox") else {
                 self.extensionContext?.completeRequest(returningItems: nil)
                 return
             }

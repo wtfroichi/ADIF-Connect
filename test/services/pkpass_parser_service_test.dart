@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adif_connect/models/ticket_model.dart';
-import 'package:adif_connect/services/pkpass_parser_service.dart';
+import 'package:anden_libre/models/ticket_model.dart';
+import 'package:anden_libre/services/pkpass_parser_service.dart';
 
 Uint8List _pkpassBytes(
   Map<String, dynamic> boardingPass, {

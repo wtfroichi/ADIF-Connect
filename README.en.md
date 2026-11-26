@@ -1,10 +1,10 @@
-# ADIF Connect
+# AndénLibre
 
 **A mobile companion for checking train services and keeping rail tickets together.**
 
 [Le esta páxina en galego](README.md)
 
-ADIF Connect is a Flutter application for iOS and Android. It can import tickets, show live departures and arrivals when the service is available, and surface trip information through supported widgets and live activities.
+AndénLibre is a Flutter application for iOS and Android. It can import tickets, show live departures and arrivals when the service is available, and surface trip information through supported widgets and live activities.
 
 > **Project status:** in development. Data availability and accuracy depend on external services. Always verify travel information against official station boards and the original ticket.
 
@@ -22,7 +22,7 @@ ADIF Connect is a Flutter application for iOS and Android. It can import tickets
 - **Google Wallet on Android:** experimental import of Save to Google Wallet links when the converter can recognize their data.
 - **Platform-aware design:** Galician interface, ADIF identity, and Liquid Glass surfaces on iOS.
 
-ADIF Connect does not include fabricated tickets or schedules. If a station has no data or a service is unavailable, the app cannot guarantee that board information will be shown.
+AndénLibre does not include fabricated tickets or schedules. If a station has no data or a service is unavailable, the app cannot guarantee that board information will be shown.
 
 ## Requirements
 
@@ -151,4 +151,4 @@ Contributions are welcome. For code changes:
 
 ---
 
-ADIF Connect is an independent project and is not affiliated with or endorsed by ADIF, Renfe, Apple, Google, or Supabase.
+AndénLibre is an independent project and is not affiliated with or endorsed by ADIF, Renfe, Apple, Google, or Supabase.

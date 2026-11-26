@@ -95,8 +95,8 @@ abstract final class OperatorThemes {
     RailOperator.renfeIntercity: OperatorStyle(
       name: 'RENFE INTERCITY',
       primary: Color(0xFF680A51),
-      secondary: Color(0xFFC026D3),
-      accent: Color(0xFFC026D3),
+      secondary: Color(0xFF8E136F),
+      accent: Color(0xFF8E136F),
       cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFECC2DF),
@@ -106,8 +106,8 @@ abstract final class OperatorThemes {
     RailOperator.renfeAlvia: OperatorStyle(
       name: 'RENFE INTERCITY',
       primary: Color(0xFF680A51),
-      secondary: Color(0xFFC026D3),
-      accent: Color(0xFFC026D3),
+      secondary: Color(0xFF8E136F),
+      accent: Color(0xFF8E136F),
       cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFECC2DF),
@@ -117,8 +117,8 @@ abstract final class OperatorThemes {
     RailOperator.renfeMd: OperatorStyle(
       name: 'RENFE REGIONAL',
       primary: Color(0xFF680A51),
-      secondary: Color(0xFFC026D3),
-      accent: Color(0xFFC026D3),
+      secondary: Color(0xFF8E136F),
+      accent: Color(0xFF8E136F),
       cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFECC2DF),
@@ -128,8 +128,8 @@ abstract final class OperatorThemes {
     RailOperator.renfeCercanias: OperatorStyle(
       name: 'RENFE CERCANÍAS',
       primary: Color(0xFFEF3340),
-      secondary: Color(0xFFEF3340),
-      accent: Color(0xFFEF3340),
+      secondary: Color(0xFFC81D25),
+      accent: Color(0xFFC81D25),
       cardBackground: Color(0x33EF3340),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFFFD8DB),
@@ -139,8 +139,8 @@ abstract final class OperatorThemes {
     RailOperator.renfeRegional: OperatorStyle(
       name: 'RENFE REGIONAL',
       primary: Color(0xFF680A51),
-      secondary: Color(0xFFC026D3),
-      accent: Color(0xFFC026D3),
+      secondary: Color(0xFF8E136F),
+      accent: Color(0xFF8E136F),
       cardBackground: Color(0x33680A51),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFECC2DF),
@@ -164,10 +164,10 @@ abstract final class OperatorThemes {
     // Iryo
     RailOperator.iryo: OperatorStyle(
       name: 'IRYO',
-      primary: Color(0xFFC8102E),
-      secondary: Color(0xFF8B0018),
-      accent: Color(0xFFFF4D6A),
-      cardBackground: Color(0x33C8102E),
+      primary: Color(0xFFD81E05),
+      secondary: Color(0xFFD81E05),
+      accent: Color(0xFFD81E05),
+      cardBackground: Color(0x33D81E05),
       textPrimary: Color(0xFFFFFFFF),
       textSecondary: Color(0xFFECC2C8),
       badgeBackground: Color(0xFFC8102E),
@@ -268,15 +268,15 @@ abstract final class OperatorThemes {
     final product = normalizeRenfeService(trainType);
     switch (product) {
       case 'AVE':
-        return of(RailOperator.renfeAve);
+        return _blueStyle(isDark);
       case 'AVANT':
         return _avantStyle(isDark);
       case 'AVLO':
         return of(RailOperator.renfeAvlo);
       case 'INTERCITY':
-        return of(RailOperator.renfeIntercity);
+        return _intercityStyle(isDark);
       case 'REGIONAL':
-        return of(RailOperator.renfeRegional);
+        return _regionalStyle(isDark);
       case 'CERCANÍAS':
         return of(RailOperator.renfeCercanias);
       case 'IRYO':
@@ -287,17 +287,17 @@ abstract final class OperatorThemes {
 
     switch (operator) {
       case RailOperator.renfeAve:
-        return of(RailOperator.renfeAve);
+        return _blueStyle(isDark);
       case RailOperator.renfeAvant:
         return _avantStyle(isDark);
       case RailOperator.renfeAvlo:
         return of(RailOperator.renfeAvlo);
       case RailOperator.renfeAlvia:
       case RailOperator.renfeIntercity:
-        return of(RailOperator.renfeIntercity);
+        return _intercityStyle(isDark);
       case RailOperator.renfeMd:
       case RailOperator.renfeRegional:
-        return of(RailOperator.renfeRegional);
+        return _regionalStyle(isDark);
       case RailOperator.renfeCercanias:
         return of(RailOperator.renfeCercanias);
       default:
@@ -306,18 +306,45 @@ abstract final class OperatorThemes {
   }
 
   static OperatorStyle _avantStyle(bool isDark) {
-    final style = of(RailOperator.renfeAvant);
-    if (!isDark) return style;
+    return _blueStyle(isDark, serviceName: 'RENFE AVANT');
+  }
+
+  static OperatorStyle _blueStyle(
+    bool isDark, {
+    String serviceName = 'RENFE AVE',
+  }) {
+    final style = of(RailOperator.renfeAve);
     return OperatorStyle(
-      name: style.name,
+      name: serviceName,
       primary: style.primary,
       secondary: style.secondary,
-      accent: const Color(0xFF60A5FA),
+      accent: isDark ? const Color(0xFF60A5FA) : style.accent,
       cardBackground: style.cardBackground,
       textPrimary: style.textPrimary,
       textSecondary: style.textSecondary,
       badgeBackground: style.badgeBackground,
-      badgeText: const Color(0xFF60A5FA),
+      badgeText: isDark ? const Color(0xFF60A5FA) : style.badgeText,
+    );
+  }
+
+  static OperatorStyle _intercityStyle(bool isDark) =>
+      _purpleStyle(isDark, 'RENFE INTERCITY');
+
+  static OperatorStyle _regionalStyle(bool isDark) =>
+      _purpleStyle(isDark, 'RENFE REGIONAL');
+
+  static OperatorStyle _purpleStyle(bool isDark, String serviceName) {
+    final style = of(RailOperator.renfeIntercity);
+    return OperatorStyle(
+      name: serviceName,
+      primary: style.primary,
+      secondary: isDark ? const Color(0xFFC026D3) : style.secondary,
+      accent: isDark ? const Color(0xFFE879F9) : style.accent,
+      cardBackground: style.cardBackground,
+      textPrimary: style.textPrimary,
+      textSecondary: style.textSecondary,
+      badgeBackground: style.badgeBackground,
+      badgeText: isDark ? const Color(0xFFE879F9) : style.badgeText,
     );
   }
 

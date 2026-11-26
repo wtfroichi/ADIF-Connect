@@ -1,4 +1,4 @@
-package es.adifconnect.adif_connect
+package es.andenlibre.app
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager

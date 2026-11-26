@@ -13,7 +13,8 @@ abstract class TicketRepository {
 
 class LocalTicketRepository implements TicketRepository {
   static const String _storageKey = 'adif_connect_saved_tickets_v1';
-  final ValueNotifier<List<TicketModel>> _ticketsNotifier = ValueNotifier<List<TicketModel>>([]);
+  final ValueNotifier<List<TicketModel>> _ticketsNotifier =
+      ValueNotifier<List<TicketModel>>([]);
 
   @override
   ValueListenable<List<TicketModel>> get ticketsListenable => _ticketsNotifier;
@@ -60,10 +61,23 @@ class LocalTicketRepository implements TicketRepository {
     await _persist();
   }
 
+  Future<void> saveTicketFromSync(TicketModel ticket) async {
+    final updated = List<TicketModel>.from(_ticketsNotifier.value);
+    final index = updated.indexWhere((item) => item.id == ticket.id);
+    if (index >= 0) {
+      updated[index] = ticket;
+    } else {
+      updated.insert(0, ticket);
+    }
+    _ticketsNotifier.value = updated;
+    await _persist();
+  }
+
   Future<void> _persist() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final encoded = jsonEncode(_ticketsNotifier.value.map((t) => t.toJson()).toList());
+      final encoded =
+          jsonEncode(_ticketsNotifier.value.map((t) => t.toJson()).toList());
       await prefs.setString(_storageKey, encoded);
     } catch (_) {
       // Preserve in-memory state when persistent storage is unavailable.
