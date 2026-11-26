@@ -1,19 +1,19 @@
 # ADIF Connect
 
-**Unha aplicación móbil para consultar circulacións ferroviarias e gardar billetes nun só lugar.**
+**Unha aplicación  para consultar as circulacións de ADIF e gardar billetes nun só lugar.**
 
 [Read this page in English](README.en.md)
 
-ADIF Connect é unha aplicación Flutter para iOS e Android. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
+ADIF Connect é unha APP Flutter para iOS, Android e Web. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
 
-> **Estado do proxecto:** en desenvolvemento. A dispoñibilidade e a precisión dos datos dependen dos servizos externos. Comproba sempre a información nos paneis oficiais da estación e no billete orixinal.
+> **Estado do proxecto:** en desenvolvemento. A dispoñibilidade e a precisión dos datos dependen de varios servizos externos. Comproba sempre a información nos paneis oficiais da estación e no billete orixinal. Non me fago responsable de ningún problema derivado do emprego da app a estas alturas.
 
 ## Funcionalidades
 
 - **Billeteira local:** garda e organiza billetes no dispositivo.
 - **Importación de billetes:**
   - Ficheiros Apple Wallet `.pkpass`.
-  - Billetes PDF, con extracción de texto para os formatos recoñecidos.
+  - Billetes PDF, con OCR/texto para os formatos de billete Renfe recoñecidos.
   - Entrada manual.
   - Apertura ou recepción de ficheiros compartidos nas plataformas compatibles.
 - **Lectura do billete:** extracción de datos como orixe, destino, horarios, tren, coche, asento, localizador e código de barras cando están dispoñibles no documento.
