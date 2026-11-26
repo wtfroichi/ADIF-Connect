@@ -40,8 +40,8 @@ Este repositorio usa Git LFS para certos ficheiros grandes. Instálao antes de c
 
 ```sh
 git lfs install
-git clone https://github.com/wtfroichi/ADIF-Connect.git
-cd ADIF-Connect
+git clone https://github.com/wtfroichi/AndenLibre.git
+cd AndenLibre
 git lfs pull
 flutter pub get
 ```
