@@ -1,0 +1,9 @@
+{
+  "name": "AndénLibre",
+  "short_name": "AndénLibre",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0D1117",
+  "theme_color": "#006338",
+  "description": "Aplicación independente para consultar circulacións ferroviarias e gardar billetes."
+}

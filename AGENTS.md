@@ -1,8 +1,8 @@
-# AGENTS.md — AndénLibre (iOS Edition)
+# AGENTS.md — AndénLibre
 
 ## 1. Project Identity & Core Goal
-- **App Name:** AndénLibre (working title)
-- **Target Platform:** iOS only (optimized for iOS 26/27 *Liquid Glass / Crystal* translucent aesthetics & Dynamic Island / Lock Screen Live Activities).
+- **App Name:** AndénLibre
+- **Target Platforms:** iOS, Android, and Web, with iOS 26/27 *Liquid Glass / Crystal* aesthetics and Dynamic Island / Lock Screen Live Activities.
 - **Language & Localization Strategy:**
   - **Code, comments, git commits, variable names:** Strictly **English** (saves tokens and follows standards).
   - **Active UI Language:** **Standard Galician (Galego normativo RAG/ILG) ONLY for now.**

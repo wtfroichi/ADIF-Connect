@@ -245,7 +245,7 @@ abstract final class AppStrings {
   static const String settingsAdifSources =
       'ADIF Infoestacións e Elixe · RENFE: flota e horarios públicos';
   static const String settingsAdifSourcesDescription =
-      'A función consulta os feeds públicos de flota e horarios de Renfe. ADIF Infoestacións/Elixe e GTFS-RT aínda non están conectados nesta versión.';
+      'A función consulta os feeds públicos de flota e horarios de RENFE. ADIF Infoestacións/Elixe e GTFS-RT aínda non están conectados nesta versión.';
   static const String settingsSupabaseCache = 'Caché de Supabase Edge';
   static const String settingsSupabaseCacheDescription =
       'Actualización cada 30 segundos con validación en directo.';
@@ -265,6 +265,8 @@ abstract final class AppStrings {
   static const String accountSyncNow = 'Sincronizar agora';
   static const String accountSignOut = 'Pechar sesión';
   static const String accountAuthTitle = 'Conta de AndénLibre';
+  static const String legalDisclaimer =
+      'AndénLibre é unha aplicación independente sen vinculación nin afiliación oficial con ADIF, RENFE, IRYO nin OUIGO. Os horarios e posicións proceden de fontes abertas públicas.';
   static const String accountEmail = 'Correo electrónico';
   static const String accountPassword = 'Contrasinal';
   static const String accountCode = 'Código de seis cifras';

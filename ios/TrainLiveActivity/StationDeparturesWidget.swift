@@ -102,7 +102,7 @@ struct StationDeparturesWidget: Widget {
         ) { entry in
             StationDeparturesWidgetView(entry: entry)
         }
-        .configurationDisplayName("Saídas en tempo real")
+        .configurationDisplayName("Saídas en tempo real · AndénLibre")
         .description("Próximas saídas da estación seleccionada.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

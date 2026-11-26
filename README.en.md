@@ -4,7 +4,7 @@
 
 [Le esta páxina en galego](README.md)
 
-AndénLibre is a Flutter application for iOS and Android. It can import tickets, show live departures and arrivals when the service is available, and surface trip information through supported widgets and live activities.
+AndénLibre is a Flutter application for iOS, Android, and Web. It can import tickets, show live departures and arrivals when the service is available, and surface trip information through supported widgets and live activities.
 
 > **Project status:** in development. Data availability and accuracy depend on external services. Always verify travel information against official station boards and the original ticket.
 
@@ -20,7 +20,7 @@ AndénLibre is a Flutter application for iOS and Android. It can import tickets,
 - **Live boards:** retrieve station departures and arrivals through the Supabase Edge Function included in this repository.
 - **Widgets and trip tracking:** station departures widgets on iOS and Android; an iOS Live Activity and an ongoing trip notification on Android.
 - **Google Wallet on Android:** experimental import of Save to Google Wallet links when the converter can recognize their data.
-- **Platform-aware design:** Galician interface, ADIF identity, and Liquid Glass surfaces on iOS.
+- **Platform-aware design:** Galician interface and Liquid Glass surfaces on iOS.
 
 AndénLibre does not include fabricated tickets or schedules. If a station has no data or a service is unavailable, the app cannot guarantee that board information will be shown.
 
@@ -151,4 +151,4 @@ Contributions are welcome. For code changes:
 
 ---
 
-AndénLibre is an independent project and is not affiliated with or endorsed by ADIF, Renfe, Apple, Google, or Supabase.
+AndénLibre is an independent application with no official connection or affiliation with ADIF, RENFE, IRYO, or OUIGO. Schedules and positions come from public open sources.

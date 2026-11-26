@@ -1,10 +1,10 @@
 # AndénLibre
 
-**Unha aplicación  para consultar as circulacións de ADIF e gardar billetes nun só lugar.**
+**Unha aplicación independente para consultar circulacións ferroviarias e gardar billetes nun só lugar.**
 
 [Read this page in English](README.en.md)
 
-AndénLibre é unha APP Flutter para iOS, Android e Web. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
+AndénLibre é unha aplicación Flutter para iOS, Android e Web. Permite importar billetes, consultar saídas e chegadas ferroviarias en tempo real cando o servizo está dispoñible, e acceder á información da viaxe desde widgets ou actividades en directo compatibles.
 
 > **Estado do proxecto:** en desenvolvemento. A dispoñibilidade e a precisión dos datos dependen de varios servizos externos. Comproba sempre a información nos paneis oficiais da estación e no billete orixinal. Non me fago responsable de ningún problema derivado do emprego da app a estas alturas.
 
@@ -20,7 +20,7 @@ AndénLibre é unha APP Flutter para iOS, Android e Web. Permite importar billet
 - **Tempo real:** consulta de saídas e chegadas por estación a través da función de Supabase incluída no repositorio.
 - **Widgets e seguimento da viaxe:** widget de saídas para iOS e Android; Live Activity de iOS e notificación de viaxe en curso en Android.
 - **Google Wallet en Android:** importación experimental de ligazóns Save to Google Wallet con datos que o conversor poida recoñecer.
-- **Deseño adaptado ás plataformas:** interface en galego, identidade ADIF e superficies Liquid Glass en iOS.
+- **Deseño adaptado ás plataformas:** interface en galego, identidade visual propia e superficies Liquid Glass en iOS.
 
 AndénLibre non incorpora billetes nin horarios ficticios. Se unha estación non ofrece datos ou o servizo non responde, a aplicación non pode garantir que haxa información dispoñible.
 
@@ -151,4 +151,4 @@ As contribucións son benvidas. Para cambios de código:
 
 ---
 
-AndénLibre é un proxecto independente e non implica afiliación nin respaldo de ADIF, Renfe, Apple, Google ou Supabase. Asimesmo, trátase dun proxecto aberto e sen ánimo de lucro. Se calquera marca implicada quixer ser removida deste proxecto a modo de imaxe, fágaseme saber en dev@rprieto.com.
+AndénLibre é unha aplicación independente sen vinculación nin afiliación oficial con ADIF, RENFE, IRYO nin OUIGO. Os horarios e posicións proceden de fontes abertas públicas.

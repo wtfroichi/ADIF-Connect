@@ -335,6 +335,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          GlassContainer(
+            padding: const EdgeInsets.all(16),
+            borderRadius: 22,
+            child: Text(
+              AppStrings.legalDisclaimer,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.45,
+                color: onSurfaceVariant,
+              ),
+            ),
+          ),
           const SizedBox(height: 140),
         ],
       ),
