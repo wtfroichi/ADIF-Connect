@@ -33,3 +33,5 @@ ios/Runner/GeneratedPluginRegistrant.m
 
 # INCLUDE
 !build/web/
+.vercel
+.env*
