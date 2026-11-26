@@ -322,7 +322,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${AppStrings.settingsVersion} 1.0.0 (Build 1)',
+                      '${AppStrings.settingsVersion} 1.0.0 (Build 2)',
+                      style: TextStyle(fontSize: 12, color: onSurfaceVariant),
+                    ),
+                    Text(
+                      '${AppStrings.settingsVersion} Desenvolto por @wtfroichi - Contacto: dev@rprieto.com',
                       style: TextStyle(fontSize: 12, color: onSurfaceVariant),
                     ),
                   ],
@@ -333,19 +337,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          GlassContainer(
-            padding: const EdgeInsets.all(16),
-            borderRadius: 22,
-            child: Text(
-              AppStrings.legalDisclaimer,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.45,
-                color: onSurfaceVariant,
-              ),
             ),
           ),
           const SizedBox(height: 140),

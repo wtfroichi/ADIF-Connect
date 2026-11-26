@@ -3,7 +3,7 @@
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-build/
+build/*
 coverage/
 
 # Environment and local configuration
@@ -30,3 +30,6 @@ ios/Runner/GeneratedPluginRegistrant.m
 .idea/
 *.iml
 *.swp
+
+# INCLUDE
+!build/web/
