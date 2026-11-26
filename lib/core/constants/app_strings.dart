@@ -204,8 +204,22 @@ abstract final class AppStrings {
   // Tab 4: Live train map
   static const String mapTitle = 'Mapa';
   static const String mapFilterAll = 'Todos';
-  static const String mapFilterHighSpeed = 'AVE / AVANT / AVLO';
-  static const String mapFilterRegional = 'INTERCITY / REGIONAL';
+  static const String mapFilterAve = 'AVE';
+  static const String mapFilterAvlo = 'Avlo';
+  static const String mapFilterAvant = 'Avant';
+  static const String mapFilterAlviaEuromed = 'Alvia / Euromed';
+  static const String mapFilterIntercityMedia = 'Intercity / MD';
+  static const String mapFilterRexional = 'Rexional';
+  static const String mapFilterCercanias = 'Cercanías';
+  static const String mapNorthLocked = 'Norte fixo';
+  static const String mapOrientNorth = 'Orientar ao norte';
+  static const String mapCenterLocation = 'Centrar na miña localización';
+  static const String mapSpainOverview = 'Amosar a vista xeral de España';
+  static const String mapLocationUnavailable =
+      'Non se puido obter a túa localización.';
+  static const String mapZoomIn = 'Achegar';
+  static const String mapZoomOut = 'Afastar';
+  static const String mapUnclassified = 'Sen categoría';
   static const String mapLoading = 'A cargar as posicións…';
   static const String mapUnavailable =
       'Non se puideron cargar as posicións dos trens.';

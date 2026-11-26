@@ -32,13 +32,33 @@ const STATIONS: Record<string, string> = {
 
 interface FeedEntity {
   id?: string;
+  serviceName?: string;
+  trainType?: string;
+  product?: string;
+  routeShortName?: string;
+  line?: string;
   vehicle?: {
-    trip?: { tripId?: string };
-    position?: { latitude?: number; longitude?: number; speed?: number };
+    trip?: {
+      tripId?: string;
+      routeId?: string;
+      routeShortName?: string;
+      trainType?: string;
+      product?: string;
+      serviceName?: string;
+    };
+    position?: { latitude?: number; longitude?: number; speed?: number; bearing?: number };
     currentStatus?: string;
     timestamp?: string | number;
     stopId?: string;
-    vehicle?: { id?: string; label?: string };
+    vehicle?: {
+      id?: string;
+      label?: string;
+      trainType?: string;
+      product?: string;
+      serviceName?: string;
+      routeShortName?: string;
+      line?: string;
+    };
   };
 }
 
@@ -74,25 +94,45 @@ function normalize(entity: FeedEntity, source: "longDistance" | "cercanias") {
   const label = vehicle?.vehicle?.label?.trim() ?? "";
   const trainNumber = vehicle?.vehicle?.id?.trim() || label.match(/\d{4,6}/)?.[0];
   if (!trainNumber) return null;
-  const line = source === "cercanias" ? label.match(/^([A-Z0-9]+)/)?.[1] : null;
   const tripId = vehicle?.trip?.tripId ?? "";
-  const serviceBrand = line || /C\d+$/.test(tripId)
+  const line = source === "cercanias"
+    ? vehicle?.vehicle?.line ?? label.match(/^([A-Z0-9]+)/)?.[1]
+    : entity.line ?? vehicle?.vehicle?.line ?? null;
+  const commuterLine = /^(?:C(?:[1-9]|10)|R(?:[1-9]|1[0-7])|RAM)(?:$|[-\s])/i
+    .test(line ?? "");
+  const serviceBrand = source === "cercanias" || commuterLine ||
+      /(?:C(?:[1-9]|10)|R(?:[1-9]|1[0-7])|RAM)$/i.test(tripId)
     ? "RENFE CERCANÍAS"
     : "RENFE";
   const stopCode = vehicle?.stopId;
   const currentStatus = vehicle?.currentStatus ?? "";
   const platform = label.match(/PLATF\.\(([^)]+)\)/)?.[1] ?? null;
   const timestamp = numberValue(vehicle?.timestamp);
+  const trainType = entity.trainType ?? vehicle?.trip?.trainType ??
+    vehicle?.vehicle?.trainType;
+  const product = entity.product ?? vehicle?.trip?.product ??
+    vehicle?.vehicle?.product;
+  const serviceName = entity.serviceName ?? vehicle?.trip?.serviceName ??
+    vehicle?.vehicle?.serviceName;
+  const routeShortName = entity.routeShortName ??
+    vehicle?.trip?.routeShortName ?? vehicle?.vehicle?.routeShortName;
 
   return {
     id: entity.id ?? `${source}-${tripId}-${trainNumber}`,
     trainNumber,
     tripId: tripId || null,
     serviceBrand,
+    trainType: trainType ?? null,
+    product: product ?? null,
+    serviceName: serviceName ?? null,
+    routeShortName: routeShortName ?? null,
+    line: line ?? null,
+    operator: "RENFE",
     source,
     lat,
     lng,
     speedKmh: position?.speed == null ? null : Math.round(position.speed * 3.6),
+    bearingDegrees: numberValue(position?.bearing),
     delayMinutes: null,
     status: currentStatus || null,
     currentStation: currentStatus === "STOPPED_AT" ? stationName(stopCode) : null,

@@ -87,23 +87,58 @@ class LiveFleetService {
             ? trip['tripId']?.toString() ?? ''
             : '';
         final line = feedIndex == 1
-            ? RegExp(r'^([A-Z0-9]+)').firstMatch(label)?.group(1)
+            ? RegExp(r'^([A-Z]+\d+|RAM)', caseSensitive: false)
+                .firstMatch(label)
+                ?.group(1)
             : null;
-        final isCercanias = line != null || RegExp(r'C\d+$').hasMatch(tripId);
+        final isCercanias = feedIndex == 1 ||
+            RegExp(r'(?:C(?:[1-9]|10)|R(?:[1-9]|1[0-7])|RAM)$',
+                    caseSensitive: false)
+                .hasMatch(tripId);
         final timestamp = _number(vehicle['timestamp']);
         final status = vehicle['currentStatus']?.toString();
         final stopId = vehicle['stopId']?.toString();
         final platform =
             RegExp(r'PLATF\.\(([^)]+)\)').firstMatch(label)?.group(1);
         final speed = _number(position['speed']);
+        final bearing = _number(position['bearing']);
+        final trainType = vehicleInfo is Map<String, dynamic>
+            ? vehicleInfo['trainType']?.toString()
+            : null;
+        final product = vehicleInfo is Map<String, dynamic>
+            ? vehicleInfo['product']?.toString()
+            : null;
+        final serviceName = vehicleInfo is Map<String, dynamic>
+            ? vehicleInfo['serviceName']?.toString()
+            : null;
+        final routeShortName = trip is Map<String, dynamic>
+            ? trip['routeShortName']?.toString()
+            : null;
+        final serviceBrand = isCercanias ? 'RENFE CERCANÍAS' : 'RENFE';
 
         trains.add(
           LiveTrain(
             id: raw['id']?.toString() ?? '$feedIndex-$tripId-$number',
             trainNumber: number,
-            serviceBrand: isCercanias ? 'RENFE CERCANÍAS' : 'RENFE',
+            serviceBrand: serviceBrand,
+            trainType: trainType,
+            product: product,
+            serviceName: serviceName,
+            routeShortName: routeShortName,
+            line: line,
+            operatorName: 'RENFE',
+            category: classifyTrain(
+              serviceBrand: serviceBrand,
+              trainType: trainType,
+              product: product,
+              serviceName: serviceName,
+              routeShortName: routeShortName,
+              line: line,
+              operatorName: 'RENFE',
+            ),
             latitude: latitude,
             longitude: longitude,
+            bearingDegrees: bearing,
             speedKmh: speed == null ? null : (speed * 3.6).roundToDouble(),
             origin: null,
             destination: null,

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -7,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/operator_themes.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../models/live_train_model.dart';
 import '../../services/live_fleet_service.dart';
@@ -30,7 +31,10 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   double _zoom = 5.2;
-  String _filter = AppStrings.mapFilterAll;
+  final Set<TrainCategory> _selectedCategories = {};
+  double _rotation = 0;
+  bool _northLocked = true;
+  bool _isLocating = false;
 
   @override
   void initState() {
@@ -82,33 +86,85 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   }
 
   List<LiveTrain> get _visibleTrains {
-    if (_filter == AppStrings.mapFilterAll) return _trains;
-    if (_filter == AppStrings.mapFilterHighSpeed) {
-      return _trains
-          .where((train) => const {'RENFE AVE', 'RENFE AVANT', 'RENFE AVLO'}
-              .contains(train.serviceBrand))
-          .toList();
-    }
+    if (_selectedCategories.isEmpty) return _trains;
     return _trains
-        .where((train) => const {'RENFE INTERCITY', 'RENFE REGIONAL'}
-            .contains(train.serviceBrand))
-        .toList();
+        .where((train) =>
+            train.category != null &&
+            _selectedCategories.contains(train.category))
+        .toList(growable: false);
   }
 
-  OperatorStyle _styleFor(LiveTrain train, bool isDark) {
-    if (train.serviceBrand == 'RENFE CERCANÍAS') {
-      return OperatorThemes.forTrain(RailOperator.renfeCercanias, 'CERCANÍAS',
-          isDark: isDark);
-    }
-    if (train.serviceBrand == 'RENFE') {
-      return OperatorThemes.of(RailOperator.adif);
-    }
-    return OperatorThemes.forTrain(RailOperator.renfe, train.serviceBrand,
-        isDark: isDark);
+  Color _colorFor(LiveTrain train) =>
+      train.category?.color ?? const Color(0xFF64748B);
+
+  String _labelFor(TrainCategory category) => switch (category) {
+        TrainCategory.ave => AppStrings.mapFilterAve,
+        TrainCategory.avlo => AppStrings.mapFilterAvlo,
+        TrainCategory.avant => AppStrings.mapFilterAvant,
+        TrainCategory.alviaEuromed => AppStrings.mapFilterAlviaEuromed,
+        TrainCategory.intercityMedia => AppStrings.mapFilterIntercityMedia,
+        TrainCategory.rexional => AppStrings.mapFilterRexional,
+        TrainCategory.cercanias => AppStrings.mapFilterCercanias,
+      };
+
+  int _countFor(TrainCategory category) =>
+      _trains.where((train) => train.category == category).length;
+
+  void _toggleCategory(TrainCategory category) {
+    setState(() {
+      if (!_selectedCategories.add(category)) {
+        _selectedCategories.remove(category);
+      }
+    });
   }
 
-  void _showTrain(LiveTrain train, bool isDark) {
-    final style = _styleFor(train, isDark);
+  void _resetFilters() => setState(_selectedCategories.clear);
+
+  void _toggleNorthLock() {
+    _mapController.rotate(0);
+    setState(() {
+      _rotation = 0;
+      _northLocked = !_northLocked;
+    });
+  }
+
+  Future<void> _centerOnLocation() async {
+    if (_isLocating) return;
+    setState(() => _isLocating = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw const LocationServiceDisabledException();
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.unableToDetermine) {
+        throw const PermissionDeniedException('Location permission denied');
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      _mapController.move(LatLng(position.latitude, position.longitude), 11);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.mapLocationUnavailable)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
+  }
+
+  void _showSpainOverview() => _mapController.move(_initialCenter, 5.2);
+
+  void _showTrain(LiveTrain train) {
+    final color = _colorFor(train);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -134,7 +190,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: style.primary),
+                            color: color),
                       ),
                     ),
                     IconButton(
@@ -152,6 +208,25 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                         color: Theme.of(context).colorScheme.onSurface),
                   ),
                 const SizedBox(height: 12),
+                if (train.category != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: color.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      _labelFor(train.category!),
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                if (train.category != null) const SizedBox(height: 4),
                 _detailRow(
                   Icons.speed_rounded,
                   train.speedKmh == null
@@ -212,9 +287,21 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           options: MapOptions(
             initialCenter: _initialCenter,
             initialZoom: _zoom,
+            initialRotation: _rotation,
+            interactionOptions: InteractionOptions(
+              flags: _northLocked
+                  ? InteractiveFlag.all & ~InteractiveFlag.rotate
+                  : InteractiveFlag.all,
+            ),
             onPositionChanged: (camera, _) {
-              if ((_zoom - camera.zoom).abs() >= 0.4 && mounted) {
-                setState(() => _zoom = camera.zoom);
+              final zoomChanged = (_zoom - camera.zoom).abs() >= 0.4;
+              final rotationChanged =
+                  (_rotation - camera.rotation).abs() >= 0.5;
+              if ((zoomChanged || rotationChanged) && mounted) {
+                setState(() {
+                  _zoom = camera.zoom;
+                  _rotation = camera.rotation;
+                });
               }
             },
           ),
@@ -258,29 +345,77 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                 for (final train in _visibleTrains)
                   Marker(
                     point: LatLng(train.latitude, train.longitude),
-                    width: _zoom < 10.5 ? 34 : 126,
-                    height: 38,
-                    child: _trainMarker(train, isDark),
+                    width: _zoom < 6.5
+                        ? 14
+                        : _zoom < 8.5
+                            ? 26
+                            : 148,
+                    height: _zoom < 6.5 ? 14 : 38,
+                    child: _trainMarker(train),
                   ),
               ],
             ),
           ],
         ),
         Positioned(
-          top: 12,
-          left: 16,
-          right: 16,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _filterChip(AppStrings.mapFilterAll),
-                const SizedBox(width: 8),
-                _filterChip(AppStrings.mapFilterHighSpeed),
-                const SizedBox(width: 8),
-                _filterChip(AppStrings.mapFilterRegional),
-              ],
+          top: 8,
+          left: 12,
+          right: 12,
+          child: GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            borderRadius: 22,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _allFilterChip(),
+                  for (final category in TrainCategory.values) ...[
+                    const SizedBox(width: 6),
+                    _filterChip(category),
+                  ],
+                ],
+              ),
             ),
+          ),
+        ),
+        Positioned(
+          top: 66,
+          right: 12,
+          child: Column(
+            children: [
+              _compassButton(),
+              const SizedBox(height: 8),
+              _hudButton(
+                icon: _isLocating ? null : Icons.my_location_rounded,
+                tooltip: AppStrings.mapCenterLocation,
+                onPressed: _centerOnLocation,
+                isLoading: _isLocating,
+              ),
+              const SizedBox(height: 8),
+              _hudButton(
+                icon: Icons.public_rounded,
+                tooltip: AppStrings.mapSpainOverview,
+                onPressed: _showSpainOverview,
+              ),
+              const SizedBox(height: 8),
+              _hudButton(
+                icon: Icons.add_rounded,
+                tooltip: AppStrings.mapZoomIn,
+                onPressed: () => _mapController.move(
+                  _mapController.camera.center,
+                  (_zoom + 1).clamp(2, 18),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _hudButton(
+                icon: Icons.remove_rounded,
+                tooltip: AppStrings.mapZoomOut,
+                onPressed: () => _mapController.move(
+                  _mapController.camera.center,
+                  (_zoom - 1).clamp(2, 18),
+                ),
+              ),
+            ],
           ),
         ),
         if (_isLoading || _hasError || (!_isLoading && _trains.isEmpty))
@@ -320,7 +455,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           ),
         Positioned(
           left: 8,
-          bottom: 86,
+          bottom: 126,
           child: DecoratedBox(
             decoration: BoxDecoration(
                 color: background.withValues(alpha: 0.88),
@@ -346,7 +481,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         ),
         Positioned(
           right: 16,
-          bottom: 102,
+          bottom: 142,
           child: FloatingActionButton.small(
             heroTag: 'live-map-refresh',
             onPressed: _refresh,
@@ -359,23 +494,136 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     );
   }
 
-  Widget _filterChip(String value) {
-    final selected = _filter == value;
+  Widget _allFilterChip() => _countFilterChip(
+        label: AppStrings.mapFilterAll,
+        count: _trains.length,
+        color: AppTheme.adifTeal,
+        selected: _selectedCategories.isEmpty,
+        onSelected: _resetFilters,
+      );
+
+  Widget _filterChip(TrainCategory category) => _countFilterChip(
+        label: _labelFor(category),
+        count: _countFor(category),
+        color: category.color,
+        selected: _selectedCategories.contains(category),
+        onSelected: () => _toggleCategory(category),
+      );
+
+  Widget _countFilterChip({
+    required String label,
+    required int count,
+    required Color color,
+    required bool selected,
+    required VoidCallback onSelected,
+  }) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return FilterChip(
       selected: selected,
-      label: Text(value),
-      onSelected: (_) => setState(() => _filter = value),
+      avatar: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          const SizedBox(width: 6),
+          Text('$count'),
+        ],
+      ),
+      onSelected: (_) => onSelected(),
       showCheckmark: false,
-      selectedColor: AppTheme.adifMint,
+      selectedColor: color.withValues(alpha: 0.22),
       labelStyle: TextStyle(
-        color: selected
-            ? AppTheme.adifPrimary
-            : Theme.of(context).colorScheme.onSurface,
+        color: onSurface,
+        fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
       backgroundColor:
-          Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
-      side: BorderSide(color: AppTheme.adifTeal.withValues(alpha: 0.28)),
+          Theme.of(context).colorScheme.surface.withValues(alpha: 0.88),
+      side: BorderSide(
+        color: selected
+            ? color.withValues(alpha: 0.85)
+            : color.withValues(alpha: 0.28),
+        width: selected ? 1.2 : 0.8,
+      ),
+    );
+  }
+
+  Widget _hudButton({
+    required IconData? icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+    bool isLoading = false,
+  }) =>
+      Tooltip(
+        message: tooltip,
+        child: GlassContainer(
+          width: 46,
+          height: 46,
+          padding: EdgeInsets.zero,
+          borderRadius: 23,
+          onTap: onPressed,
+          child: Center(
+            child: isLoading
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(icon,
+                    size: 20, color: Theme.of(context).colorScheme.onSurface),
+          ),
+        ),
+      );
+
+  Widget _compassButton() {
+    final tooltip =
+        _northLocked ? AppStrings.mapNorthLocked : AppStrings.mapOrientNorth;
+    return Tooltip(
+      message: tooltip,
+      child: GlassContainer(
+        width: 46,
+        height: 46,
+        padding: EdgeInsets.zero,
+        borderRadius: 23,
+        onTap: _toggleNorthLock,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              top: 4,
+              child: Text(
+                'N',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Transform.rotate(
+              angle: -_rotation * math.pi / 180,
+              child: const Icon(
+                Icons.navigation_rounded,
+                size: 21,
+                color: Color(0xFFE5484D),
+              ),
+            ),
+            if (_northLocked)
+              Positioned(
+                right: 7,
+                bottom: 7,
+                child: Icon(
+                  Icons.lock_rounded,
+                  size: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -390,20 +638,22 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         ),
       );
 
-  Widget _trainMarker(LiveTrain train, bool isDark) {
-    final style = _styleFor(train, isDark);
-    final compact = _zoom < 10.5;
+  Widget _trainMarker(LiveTrain train) {
+    final color = _colorFor(train);
+    final foreground = train.category?.foreground ?? Colors.white;
+    final compact = _zoom < 8.5;
+    final compactSize = _zoom < 6.5 ? 14.0 : 26.0;
     return GestureDetector(
-      onTap: () => _showTrain(train, isDark),
+      onTap: () => _showTrain(train),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
-        width: compact ? 34 : 126,
-        height: 34,
+        width: compact ? compactSize : 126,
+        height: compact ? compactSize : 34,
         padding: compact
             ? EdgeInsets.zero
             : const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(
-          color: style.primary,
+          color: color,
           shape: compact ? BoxShape.circle : BoxShape.rectangle,
           borderRadius: compact ? null : BorderRadius.circular(18),
           border:
@@ -419,18 +669,32 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.train_rounded, size: 18, color: Colors.white),
+            if (train.bearingDegrees != null)
+              Transform.rotate(
+                angle: train.bearingDegrees! * math.pi / 180,
+                child: Icon(
+                  Icons.navigation_rounded,
+                  size: compact && compactSize < 20 ? 9 : 16,
+                  color: foreground,
+                ),
+              )
+            else
+              Icon(
+                Icons.train_rounded,
+                size: compact && compactSize < 20 ? 9 : 18,
+                color: foreground,
+              ),
             if (!compact) ...[
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
-                  '${_shortBrand(train.serviceBrand)} ${train.trainNumber}',
+                  '${train.category == null ? 'RENFE' : _shortCategory(train.category!)} ${train.trainNumber}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white),
+                      color: foreground),
                 ),
               ),
             ],
@@ -440,6 +704,13 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     );
   }
 
-  String _shortBrand(String brand) =>
-      brand.replaceFirst('RENFE ', '').replaceFirst('CERCANÍAS', 'CERC.');
+  String _shortCategory(TrainCategory category) => switch (category) {
+        TrainCategory.ave => 'AVE',
+        TrainCategory.avlo => 'AVLO',
+        TrainCategory.avant => 'AVANT',
+        TrainCategory.alviaEuromed => 'ALVIA',
+        TrainCategory.intercityMedia => 'IC/MD',
+        TrainCategory.rexional => 'REG.',
+        TrainCategory.cercanias => 'CERC.',
+      };
 }
