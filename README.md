@@ -151,4 +151,4 @@ As contribucións son benvidas. Para cambios de código:
 
 ---
 
-ADIF Connect é un proxecto independente e non implica afiliación nin respaldo de ADIF, Renfe, Apple, Google ou Supabase.
+ADIF Connect é un proxecto independente e non implica afiliación nin respaldo de ADIF, Renfe, Apple, Google ou Supabase. Asimesmo, trátase dun proxecto aberto e sen ánimo de lucro. Se calquera marca implicada quixer ser removida deste proxecto a modo de imaxe, fágaseme saber en dev@rprieto.com.
